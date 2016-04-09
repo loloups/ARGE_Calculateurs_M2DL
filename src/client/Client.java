@@ -6,21 +6,27 @@ import utils.XmlRpcUtil;
 
 public class Client {
 
-	public final static int numberOfrequests = 10;
-
 	public static void main(String[] args) {
-		try {
+		if(args.length != 3) {
+			System.err.println("Client needs exactly 3 parameters to start : number of requests per second, repartitor address and port.");
+		}
+		else {
+			try {
 
-			XmlRpcClient client = XmlRpcUtil.createXmlRpcClient("127.0.0.1", 8080);
+				XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(args[1], Integer.parseInt(args[2]));
 
-			for(int i=0; i< numberOfrequests ;i++) {
-				Object[] params = new Object[] {};
-				Integer result = (Integer) client.execute("Repartitor.send", params);
-				System.out.println("The result of 2 + 3 is " + result + ".");
-			}
+				while(true) {
+					for(int i=0; i< Integer.parseInt(args[0]) ;i++) {
+						Object[] params = new Object[] {new Integer(i)};
+						Integer result = (Integer) client.execute("Repartitor.send", params);
+						System.out.println("The result of (" + i + " + " + new Integer(i+1) + ") is " + result + ".");
+					}
+					System.out.println("1 second left ...");
+				}
 
-		}catch(Exception e) {
-			e.printStackTrace();
+			}catch(Exception e) {
+				e.printStackTrace();
+			}	
 		}
 	}
 
