@@ -43,9 +43,9 @@ public class XmlRpcUtil {
 		return stringBuffer.toString();
 	}
 
-	public static void createXmlRpcServer(WebServer webServer) throws IOException, XmlRpcException {
+	public static void createXmlRpcServer(WebServer webServer, String handlersProperties) throws IOException, XmlRpcException {
 		PropertyHandlerMapping propertyHandlerMapping = new PropertyHandlerMapping();
-		propertyHandlerMapping.load(Thread.currentThread().getContextClassLoader(), "Handlers.properties");
+		propertyHandlerMapping.load(Thread.currentThread().getContextClassLoader(), handlersProperties);
 
 		XmlRpcServer server = webServer.getXmlRpcServer();
 		server.setHandlerMapping(propertyHandlerMapping);

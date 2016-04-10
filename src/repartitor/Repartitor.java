@@ -1,6 +1,7 @@
 package repartitor;
 
 import org.apache.xmlrpc.client.XmlRpcClient;
+import org.apache.xmlrpc.webserver.WebServer;
 
 import utils.XmlRpcUtil;
 
@@ -20,6 +21,22 @@ public class Repartitor {
 		}
 
 		return result;
+	}
+
+	public static void main(String[] args) throws Exception {
+		if(args.length != 1) {
+			System.err.println("Repartitor needs exactly 1 parameter to start : repartitor port.");
+		}
+		else {
+			System.out.println("Attenmpting to start Repartitor web server ...");
+
+			WebServer webServer = new WebServer(Integer.parseInt(args[0]));
+			XmlRpcUtil.createXmlRpcServer(webServer, "RepartitorHandlers.properties");
+			webServer.start();
+
+			System.out.println("Repartitor is ready and is now accepting requests.");
+			System.out.println("Halt program to stop server.");
+		}
 	}
 
 }
