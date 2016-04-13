@@ -1,12 +1,54 @@
 package repartitor;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.webserver.WebServer;
 
+import calculator.Calculator;
+import calculator.CalculatorDetails;
 import utils.XmlRpcUtil;
 
 public class Repartitor {
 
+	public static Set<CalculatorDetails> calculators;
+	
+	public boolean add(Integer port, String address) {
+	
+		String[] args = {port.toString()};
+		
+		try {
+			Calculator.main(args);
+			calculators.add(new CalculatorDetails(address,port, Calculator.lastCreatedCalculatorServer));
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true;
+	}
+
+	public boolean delete(Integer port, String address) {
+				
+		try {
+			Iterator<CalculatorDetails> iterator = calculators.iterator();
+			while (iterator.hasNext()) {
+			    CalculatorDetails calculatorDetails = iterator.next();
+			    if (calculatorDetails.getPort() == port && calculatorDetails.getAddress().equals(address)) {
+			    	calculatorDetails.getWebServer().shutdown();
+			        iterator.remove();
+			        System.out.println("Deletion of webserver with port " + port.toString());
+			    }
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true;
+	}
+	
 	public int send(int i) {
 		int result = -1;
 		try {
@@ -32,6 +74,7 @@ public class Repartitor {
 
 			WebServer webServer = new WebServer(Integer.parseInt(args[0]));
 			XmlRpcUtil.createXmlRpcServer(webServer, "RepartitorHandlers.properties");
+			calculators = new HashSet<>();
 			webServer.start();
 
 			System.out.println("Repartitor is ready and is now accepting requests.");
