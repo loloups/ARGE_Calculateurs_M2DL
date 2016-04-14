@@ -1,8 +1,8 @@
 package repartitor;
 
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.webserver.WebServer;
@@ -35,12 +35,10 @@ public class Repartitor {
 	public boolean delete(Integer port, String address) {
 				
 		try {
-			Iterator<CalculatorDetails> iterator = calculators.iterator();
-			while (iterator.hasNext()) {
-			    CalculatorDetails calculatorDetails = iterator.next();
+			for (CalculatorDetails calculatorDetails : calculators) {
 			    if (calculatorDetails.getPort() == port && calculatorDetails.getAddress().equals(address)) {
 			    	calculatorDetails.getWebServer().shutdown();
-			        iterator.remove();
+			        calculators.remove(calculatorDetails);
 			        System.out.println("Deletion of webserver with port " + port.toString());
 			    }
 			}
@@ -54,24 +52,18 @@ public class Repartitor {
 	public int send(int i) {
 		int result = -1;
 		try {
-			boolean sended = true;
-			Iterator<CalculatorDetails> iterator = calculators.iterator();
-			while (iterator.hasNext()) {
-			    CalculatorDetails calculatorDetails = iterator.next();
+			boolean sended = false;
+			for (CalculatorDetails calculatorDetails : calculators) {
 			    if(sended) {
 			    	if(calculatorDetails.getNbCurrentRequest() == 0) {
 			    		delete(calculatorDetails.getPort(), calculatorDetails.getAddress());
 			    	}
-			    } else {
-			    	if(calculatorDetails.getNbCurrentRequest() == calculatorDetails.getNbMaxRequest()){
-				    	
-				    } else {
-				    	XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(calculatorDetails.getAddress(), calculatorDetails.getPort());
-						Object[] params = new Object[] { new Integer(i), new Integer(i + 1) };
-						calculatorDetails.incrRequest();
-						client.executeAsync("Calculator.add", params, new ClientCallback(calculatorDetails));
-						sended = true;
-				    }
+			    } else if(calculatorDetails.getNbCurrentRequest() < calculatorDetails.getNbMaxRequest()){
+			    	XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(calculatorDetails.getAddress(), calculatorDetails.getPort());
+					Object[] params = new Object[] { new Integer(i), new Integer(i + 1) };
+					calculatorDetails.incrRequest();
+					client.executeAsync("Calculator.add", params, new ClientCallback(calculatorDetails));
+					sended = true;
 			    }	    
 			}
 			if(!sended) {
@@ -100,7 +92,7 @@ public class Repartitor {
 
 			WebServer webServer = new WebServer(Integer.parseInt(args[0]));
 			XmlRpcUtil.createXmlRpcServer(webServer, "RepartitorHandlers.properties");
-			calculators = new HashSet<>();
+			calculators = Collections.newSetFromMap(new ConcurrentHashMap<CalculatorDetails, Boolean>());
 			webServer.start();
 
 			System.out.println("Repartitor is ready and is now accepting requests.");

@@ -9,6 +9,12 @@ public class Calculator {
 	public static WebServer lastCreatedCalculatorServer;
 
 	public int add(int a, int b) {
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return a + b;
 	}
 

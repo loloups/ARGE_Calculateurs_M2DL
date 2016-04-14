@@ -16,7 +16,7 @@ public class CalculatorDetails {
 		this.port = port;
 		this.webServer = webServer;
 		this.nbCurrentRequest = 0;
-		this.nbMaxRequest = 50;
+		this.nbMaxRequest = 100;
 	}
 
 	public WebServer getWebServer() {
@@ -36,11 +36,15 @@ public class CalculatorDetails {
 	}
 
 	public void incrRequest() {
-		this.nbCurrentRequest++;
+		synchronized (Integer.valueOf(this.nbCurrentRequest)) {
+			this.nbCurrentRequest++;
+		}
 	}
 	
 	public void decrRequest() {
-		this.nbCurrentRequest--;
+		synchronized (Integer.valueOf(this.nbCurrentRequest)) {
+			this.nbCurrentRequest--;
+		}
 	}
 
 	public int getNbMaxRequest() {
