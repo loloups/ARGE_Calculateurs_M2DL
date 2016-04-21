@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.webserver.WebServer;
 
-import calculator.Calculator;
 import calculator.CalculatorDetails;
 import utils.ClientCallback;
 import utils.XmlRpcUtil;
@@ -15,21 +14,18 @@ import utils.XmlRpcUtil;
 public class Repartitor {
 
 	public static Set<CalculatorDetails> calculators;
+	public static int curCalculator = 1;
 	
-	public CalculatorDetails add(Integer port, String address) {
-	
-		String[] args = {port.toString()};
-		
+	public boolean add(Integer port, String address) {
 		try {
-			Calculator.main(args);
-			CalculatorDetails calculatorDetails = new CalculatorDetails(address,port, Calculator.lastCreatedCalculatorServer);
-			calculators.add(calculatorDetails);
-			return calculatorDetails;
+			calculators.add(new CalculatorDetails(address,port));
+			System.out.println("Addition of calculator with port : "+port.toString());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return null;
+			return false;
 		}
+		return true;
 	}
 
 	public boolean delete(Integer port, String address) {
@@ -37,7 +33,6 @@ public class Repartitor {
 		try {
 			for (CalculatorDetails calculatorDetails : calculators) {
 			    if (calculatorDetails.getPort() == port && calculatorDetails.getAddress().equals(address)) {
-			    	calculatorDetails.getWebServer().shutdown();
 			        calculators.remove(calculatorDetails);
 			        System.out.println("Deletion of webserver with port " + port.toString());
 			    }
@@ -52,29 +47,21 @@ public class Repartitor {
 	public int send(int i) {
 		int result = -1;
 		try {
-			boolean sended = false;
-			for (CalculatorDetails calculatorDetails : calculators) {
-			    if(sended) {
-			    	if(calculatorDetails.getNbCurrentRequest() == 0) {
-			    		delete(calculatorDetails.getPort(), calculatorDetails.getAddress());
-			    	}
-			    } else if(calculatorDetails.getNbCurrentRequest() < calculatorDetails.getNbMaxRequest()){
-			    	XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(calculatorDetails.getAddress(), calculatorDetails.getPort());
-					Object[] params = new Object[] { new Integer(i), new Integer(i + 1) };
-					calculatorDetails.incrRequest();
-					client.executeAsync("Calculator.add", params, new ClientCallback(calculatorDetails));
-					sended = true;
-			    }	    
-			}
-			if(!sended) {
-				CalculatorDetails calculatorDetails = add(8080+calculators.size()+1, "127.0.0.1");
-				if(calculatorDetails != null) {
-					System.out.println("Je crée un calculateur");
-					XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(calculatorDetails.getAddress(), calculatorDetails.getPort());
-					Object[] params = new Object[] { new Integer(i), new Integer(i + 1) };
-					calculatorDetails.incrRequest();
-					client.executeAsync("Calculator.add", params, new ClientCallback(calculatorDetails));
+			CalculatorDetails calculatorDetails = null;
+			int numCal = 1;
+			for (CalculatorDetails calculator : calculators) {
+				if(i == curCalculator){
+					calculatorDetails = calculator;
 				}
+				numCal++;
+			}
+			
+			if(calculatorDetails != null){
+				System.out.println("Current calculator"+curCalculator);
+				XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(calculatorDetails.getAddress(), calculatorDetails.getPort());
+				Object[] params = new Object[] { new Integer(i), new Integer(i + 1) };
+				client.executeAsync("Calculator.add", params, new ClientCallback());
+				curCalculator = (curCalculator+1) % (calculators.size()+1);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
