@@ -14,7 +14,7 @@ import utils.XmlRpcUtil;
 public class Repartitor {
 
 	public static Set<CalculatorDetails> calculators;
-	public static int curCalculator = 1;
+	public static int curCalculator = 0;
 	
 	public boolean add(Integer port, String address) {
 		try {
@@ -48,7 +48,7 @@ public class Repartitor {
 		int result = -1;
 		try {
 			CalculatorDetails calculatorDetails = null;
-			int numCal = 1;
+			int numCal = 0;
 			for (CalculatorDetails calculator : calculators) {
 				if(i == curCalculator){
 					calculatorDetails = calculator;
@@ -61,7 +61,7 @@ public class Repartitor {
 				XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(calculatorDetails.getAddress(), calculatorDetails.getPort());
 				Object[] params = new Object[] { new Integer(i), new Integer(i + 1) };
 				client.executeAsync("Calculator.add", params, new ClientCallback());
-				curCalculator = (curCalculator+1) % (calculators.size()+1);
+				curCalculator = (curCalculator+1) % (calculators.size());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
