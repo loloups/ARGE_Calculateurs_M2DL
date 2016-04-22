@@ -28,7 +28,7 @@ public class Repartitor {
 		return true;
 	}
 
-	public boolean delete(Integer port, String address) {
+	public boolean del(Integer port, String address) {
 				
 		try {
 			for (CalculatorDetails calculatorDetails : calculators) {
