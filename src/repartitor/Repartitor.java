@@ -26,7 +26,7 @@ public class Repartitor {
 	public static Set<CalculatorDetails> calculators;
 	public static int curCalculator = 0;
 	
-    public boolean add(Integer port) {
+    public boolean add(Integer port, String address) {
         try {
             
             Thread.sleep(1000);
@@ -56,9 +56,9 @@ public class Repartitor {
 
             // Get the address of the WN
             Map<String,List<? extends Address>> addresses = s.getAddresses().getAddresses();
-            String address = addresses.get("private").get(0).getAddr();
+            String addressServer = addresses.get("private").get(0).getAddr();
             
-            calculators.add(new CalculatorDetails(address, port));
+            calculators.add(new CalculatorDetails(addressServer, port));
             System.out.println("Addition of calculator with port : " + port.toString());
         }
         catch (Exception e) {
