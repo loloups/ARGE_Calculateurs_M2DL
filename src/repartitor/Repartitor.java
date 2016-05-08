@@ -1,11 +1,21 @@
 package repartitor;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.webserver.WebServer;
+import org.openstack4j.api.Builders;
+import org.openstack4j.api.OSClient;
+import org.openstack4j.model.compute.Address;
+import org.openstack4j.model.compute.Server;
+import org.openstack4j.model.compute.Server.Status;
+import org.openstack4j.model.compute.ServerCreate;
+import org.openstack4j.openstack.OSFactory;
 
 import calculator.CalculatorDetails;
 import utils.ClientCallback;
@@ -16,17 +26,63 @@ public class Repartitor {
 	public static Set<CalculatorDetails> calculators;
 	public static int curCalculator = 0;
 	
-	public boolean add(Integer port, String address) {
-		try {
-			calculators.add(new CalculatorDetails(address,port));
-			System.out.println("Addition of calculator with port : "+port.toString());
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
+    public boolean add(Integer port) {
+        try {
+            
+            Thread.sleep(1000);
+
+            OSClient os = connectCloudmip();
+
+            // Create a Server Model Object
+            List<String> networks = Arrays.asList("c1445469-4640-4c5a-ad86-9c0cb6650cca");
+
+            ServerCreate serverCreate = Builders.server()
+                .name("Moskito4")
+                .flavor("2")
+                .image("2a321e3b-60d9-4411-ae94-51a81827efe9")
+                .networks(networks)
+                .keypairName("mykey")
+                .build();
+            System.out.println("WN created");
+            
+            // Boot the server
+            Server server = os.compute().servers().boot(serverCreate);
+            
+            // Waiting the server
+            while (os.compute().servers().get(server.getId()).getStatus() != Status.ACTIVE) {
+                Thread.sleep(1000);
+            }
+            Server s = os.compute().servers().get(server.getId());
+
+            // Get the address of the WN
+            Map<String,List<? extends Address>> addresses = s.getAddresses().getAddresses();
+            String address = addresses.get("private").get(0).getAddr();
+            
+            calculators.add(new CalculatorDetails(address, port));
+            System.out.println("Addition of calculator with port : " + port.toString());
+        }
+        catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Authenticate to Cloudmip
+     * @return OSClient
+     */
+    private OSClient connectCloudmip() {
+
+        OSClient os = OSFactory.builder()
+            .endpoint("http://195.220.53.61:5000/v2.0")
+            .credentials("ens29", "KNO2X4")
+            .tenantName("service")
+            .authenticate();
+        
+        return os;
+    }
 
 	public boolean del(Integer port, String address) {
 				
