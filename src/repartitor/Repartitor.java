@@ -13,7 +13,6 @@ import org.openstack4j.api.Builders;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.model.compute.Address;
 import org.openstack4j.model.compute.Server;
-import org.openstack4j.model.compute.Server.Status;
 import org.openstack4j.model.compute.ServerCreate;
 import org.openstack4j.openstack.OSFactory;
 
@@ -45,17 +44,11 @@ public class Repartitor {
                 .build();
             System.out.println("WN created");
             
-            // Boot the server
-            Server server = os.compute().servers().boot(serverCreate);
+            // Boot and wait for the server
+            Server server = os.compute().servers().bootAndWaitActive(serverCreate,6000);
             
-            // Waiting the server
-            while (os.compute().servers().get(server.getId()).getStatus() != Status.ACTIVE) {
-                Thread.sleep(1000);
-            }
-            Server s = os.compute().servers().get(server.getId());
-
             // Get the address of the WN
-            Map<String,List<? extends Address>> addresses = s.getAddresses().getAddresses();
+            Map<String,List<? extends Address>> addresses = server.getAddresses().getAddresses();
             String addressServer = addresses.get("private").get(0).getAddr();
             
             calculators.add(new CalculatorDetails(addressServer, port));
