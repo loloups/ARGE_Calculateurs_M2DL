@@ -1,13 +1,17 @@
 package repartitor;
 
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.xmlrpc.client.XmlRpcClient;
+import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.apache.xmlrpc.client.XmlRpcCommonsTransportFactory;
 import org.apache.xmlrpc.webserver.WebServer;
 import org.openstack4j.api.Builders;
 import org.openstack4j.api.OSClient;
@@ -36,9 +40,9 @@ public class Repartitor {
             List<String> networks = Arrays.asList("c1445469-4640-4c5a-ad86-9c0cb6650cca");
 
             ServerCreate serverCreate = Builders.server()
-                .name("Moskito4")
+                .name("Moskito-" + calculators.size())
                 .flavor("2")
-                .image("2a321e3b-60d9-4411-ae94-51a81827efe9")
+                .image("652e70e5-48d0-40d0-a725-5aa12680ba20")
                 .networks(networks)
                 .keypairName("mykey")
                 .build();
@@ -53,6 +57,26 @@ public class Repartitor {
             
             calculators.add(new CalculatorDetails(addressServer, port));
             System.out.println("Addition of calculator with port : " + port.toString());
+            
+            // Example : call a calculator from a workerNode
+            System.out.println(addressServer);
+            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
+            config.setServerURL(new URL("http://" + addressServer + ":8080/xmlrpc"));
+            config.setEnabledForExtensions(true);
+            config.setConnectionTimeout(60 * 1000);
+            config.setReplyTimeout(60 * 1000);
+
+            XmlRpcClient client = new XmlRpcClient();
+
+            client.setTransportFactory(
+                new XmlRpcCommonsTransportFactory(client));
+            client.setConfig(config);
+
+            Object[] params = new Object[]
+                { new Integer(2), new Integer(3) };
+            Integer result = (Integer) client.execute("Calculator.add", params);
+            System.out.println("2 + 3 = " + result);
+
         }
         catch (Exception e) {
             // TODO Auto-generated catch block
@@ -130,7 +154,6 @@ public class Repartitor {
 			XmlRpcUtil.createXmlRpcServer(webServer, "RepartitorHandlers.properties");
 			calculators = Collections.newSetFromMap(new ConcurrentHashMap<CalculatorDetails, Boolean>());
 			webServer.start();
-
 			System.out.println("Repartitor is ready and is now accepting requests.");
 			System.out.println("Halt program to stop server.");
 		}
