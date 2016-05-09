@@ -17,17 +17,17 @@ public class UpdateRepartitor {
                 XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(args[0], Integer.parseInt(args[1]));
 
                 String action = args[2];
-		
-		System.out.println(args[2]);
+
+                System.out.println(args[2]);
                 if (action.equals("add")) {
                     System.out.println("add");
-		    Object[] params = new Object[] { new Integer(args[3]) };
-                    client.execute("Repartitor." + args[2], params);
+                    Object[] params = new Object[] { new Integer(args[3]) };
+                    client.execute("Repartitor." + action, params);
                 }
-                else if (action.equals("del")){
+                else if (action.equals("del")) {
                     System.out.println("del");
-		    Object[] params = new Object[] { args[3] };
-                    client.execute("Repartitor." + args[2], params);
+                    Object[] params = new Object[] { args[3] };
+                    client.execute("Repartitor." + action, params);
                 }
 
             }

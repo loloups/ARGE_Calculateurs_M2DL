@@ -61,8 +61,9 @@ public class Repartitor {
             calculators.add(new CalculatorDetails(id, addressServer, port));
             System.out.println("Addition of calculator with port " + port.toString() + ", address " + addressServer + " and id " + id);
             
+            Thread.sleep(5000);
+            
             // Example : call a calculator from a workerNode
-            System.out.println(addressServer);
             XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
             config.setServerURL(new URL("http://" + addressServer + ":8080/xmlrpc"));
             config.setEnabledForExtensions(true);
@@ -93,7 +94,7 @@ public class Repartitor {
 			        
 		try {
 			for (CalculatorDetails calculatorDetails : calculators) {
-			    if (calculatorDetails.getId() == id) {
+			    if (calculatorDetails.getId().equals(id)) {
 			        calculators.remove(calculatorDetails);
 			        OSClient os = connectCloudmip();
 			        os.compute().servers().delete(id);
