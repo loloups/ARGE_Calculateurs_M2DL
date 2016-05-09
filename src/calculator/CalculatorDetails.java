@@ -2,13 +2,14 @@ package calculator;
 
 public class CalculatorDetails {
 
-    String name;
+    String id;
 
     String address;
     int    port;
 
-    public CalculatorDetails(String name, String address, int port) {
+    public CalculatorDetails(String id, String address, int port) {
         super();
+        this.id = id;
         this.address = address;
         this.port = port;
     }
@@ -21,7 +22,7 @@ public class CalculatorDetails {
         return port;
     }
 
-    public String getName() {
-        return name;
+    public String getId() {
+        return id;
     }
 }
