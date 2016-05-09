@@ -45,7 +45,7 @@ public class Repartitor {
                 .flavor("2")
                 .image("652e70e5-48d0-40d0-a725-5aa12680ba20")
                 .networks(networks)
-                .keypairName("mykey")
+                .keypairName("MoskitoKey")
                 .build();
             
             
@@ -56,8 +56,8 @@ public class Repartitor {
             // Get the address of the WN
             Map<String,List<? extends Address>> addresses = server.getAddresses().getAddresses();
             String addressServer = addresses.get("private").get(0).getAddr();
-            
-            calculators.add(new CalculatorDetails(name, addressServer, port));
+            System.out.println(server.getId());
+            calculators.add(new CalculatorDetails(server.getId(), addressServer, port));
             System.out.println("Addition of calculator with port : " + port.toString());
             
             // Example : call a calculator from a workerNode
@@ -88,17 +88,17 @@ public class Repartitor {
         return true;
     }
 
-	public boolean del(String name) {
+	public boolean del(String id) {
 			
         OSClient os = connectCloudmip();
-
-        os.compute().servers().delete(name);
+	System.out.println("Connected");
+        os.compute().servers().delete(id);
 
 		try {
 			for (CalculatorDetails calculatorDetails : calculators) {
-			    if (calculatorDetails.getName() == name) {
+			    if (calculatorDetails.getName() == id) {
 			        calculators.remove(calculatorDetails);
-			        System.out.println("Deletion of webserver " + name);
+			        System.out.println("Deletion of webserver " + id);
 			    }
 			}
 		} catch (Exception e) {
