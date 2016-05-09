@@ -2,20 +2,26 @@ package calculator;
 
 public class CalculatorDetails {
 
-	String address;
-	int port;
-	
-	public CalculatorDetails(String address, int port) {
-		super();
-		this.address = address;
-		this.port = port;
-	}
+    String name;
 
-	public String getAddress() {
-		return address;
-	}
+    String address;
+    int    port;
 
-	public int getPort() {
-		return port;
-	}	
+    public CalculatorDetails(String name, String address, int port) {
+        super();
+        this.address = address;
+        this.port = port;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

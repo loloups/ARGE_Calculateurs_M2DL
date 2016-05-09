@@ -29,7 +29,7 @@ public class Repartitor {
 	public static Set<CalculatorDetails> calculators;
 	public static int curCalculator = 0;
 	
-    public boolean add(Integer port, String address) {
+    public boolean add(Integer port) {
         try {
             
             Thread.sleep(1000);
@@ -39,23 +39,25 @@ public class Repartitor {
             // Create a Server Model Object
             List<String> networks = Arrays.asList("c1445469-4640-4c5a-ad86-9c0cb6650cca");
 
+            String name = "Moskito_" + calculators.size();
             ServerCreate serverCreate = Builders.server()
-                .name("Moskito-" + calculators.size())
+                .name(name)
                 .flavor("2")
                 .image("652e70e5-48d0-40d0-a725-5aa12680ba20")
                 .networks(networks)
                 .keypairName("mykey")
                 .build();
-            System.out.println("WN created");
+            
             
             // Boot and wait for the server
             Server server = os.compute().servers().bootAndWaitActive(serverCreate,6000);
+            System.out.println("WN created");
             
             // Get the address of the WN
             Map<String,List<? extends Address>> addresses = server.getAddresses().getAddresses();
             String addressServer = addresses.get("private").get(0).getAddr();
             
-            calculators.add(new CalculatorDetails(addressServer, port));
+            calculators.add(new CalculatorDetails(name, addressServer, port));
             System.out.println("Addition of calculator with port : " + port.toString());
             
             // Example : call a calculator from a workerNode
@@ -86,28 +88,17 @@ public class Repartitor {
         return true;
     }
 
-    /**
-     * Authenticate to Cloudmip
-     * @return OSClient
-     */
-    private OSClient connectCloudmip() {
+	public boolean del(String name) {
+			
+        OSClient os = connectCloudmip();
 
-        OSClient os = OSFactory.builder()
-            .endpoint("http://195.220.53.61:5000/v2.0")
-            .credentials("ens29", "KNO2X4")
-            .tenantName("service")
-            .authenticate();
-        
-        return os;
-    }
+        os.compute().servers().delete(name);
 
-	public boolean del(Integer port, String address) {
-				
 		try {
 			for (CalculatorDetails calculatorDetails : calculators) {
-			    if (calculatorDetails.getPort() == port && calculatorDetails.getAddress().equals(address)) {
+			    if (calculatorDetails.getName() == name) {
 			        calculators.remove(calculatorDetails);
-			        System.out.println("Deletion of webserver with port " + port.toString());
+			        System.out.println("Deletion of webserver " + name);
 			    }
 			}
 		} catch (Exception e) {
@@ -117,6 +108,21 @@ public class Repartitor {
 		return true;
 	}
 	
+    /**
+     * Authenticate to Cloudmip
+     * @return OSClient
+     */
+    private OSClient connectCloudmip() {
+
+        OSClient os = OSFactory.builder()
+            .endpoint("http://195.220.53.61:5000/v2.0")
+            .credentials("ens30", "74J2O1")
+            .tenantName("service")
+            .authenticate();
+        
+        return os;
+    }
+    
 	public int send(int i) {
 		int result = -1;
 		try {
