@@ -50,7 +50,7 @@ public class Repartitor {
 			CalculatorDetails calculatorDetails = null;
 			int numCal = 0;
 			for (CalculatorDetails calculator : calculators) {
-				if(i == curCalculator){
+				if(numCal == curCalculator){
 					calculatorDetails = calculator;
 				}
 				numCal++;
@@ -58,9 +58,12 @@ public class Repartitor {
 			
 			if(calculatorDetails != null){
 				System.out.println("Current calculator"+curCalculator);
+				XmlRpcClient clientManager = XmlRpcUtil.createXmlRpcClient("localhost",8080);
+				Object[] paramsManager = new Object[] { calculatorDetails.getAddress(), calculatorDetails.getPort()};
+				clientManager.execute("Manager.incr", paramsManager);
 				XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(calculatorDetails.getAddress(), calculatorDetails.getPort());
 				Object[] params = new Object[] { new Integer(i), new Integer(i + 1) };
-				client.executeAsync("Calculator.add", params, new ClientCallback());
+				client.executeAsync("Calculator.add", params, new ClientCallback(calculatorDetails));
 				curCalculator = (curCalculator+1) % (calculators.size());
 			}
 		} catch (Exception e) {
