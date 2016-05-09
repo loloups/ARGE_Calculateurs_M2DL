@@ -97,7 +97,7 @@ public class Repartitor {
 			    if (calculatorDetails.getId().equals(id)) {
 			        calculators.remove(calculatorDetails);
 			        OSClient os = connectCloudmip();
-			        os.compute().servers().delete(id);
+                    os.compute().servers().delete(id);
 			        System.out.println("Deletion of webserver " + id);
 			    }
 			}
