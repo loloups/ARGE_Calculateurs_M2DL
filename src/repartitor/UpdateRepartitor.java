@@ -15,6 +15,7 @@ public class UpdateRepartitor {
         }
         else {
             try {
+		System.out.println("http://" + args[0] + ":"+args[1]+"/xmlrpc");
             	XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
     			config.setServerURL(new URL("http://" + args[0] + ":"+args[1]+"/xmlrpc"));
     			config.setEnabledForExtensions(true);

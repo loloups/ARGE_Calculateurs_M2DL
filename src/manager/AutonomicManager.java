@@ -49,23 +49,26 @@ public class AutonomicManager {
 		return os;
 	}
 
-	public void incr(String address, int port) {
+	public int incr(String address, int port) {
 		for (utils.Image image : this.getImages()) {
 			if (address.equals(image.getAddress())) {
 				image.setNbRequest(image.getNbRequest() + 1);
 				break;
 			}
 		}
+		return 1;
 
 	}
 
-	public void decr(String address, int port) {
+	public int decr(String address, int port) {
 		for (utils.Image image : this.getImages()) {
 			if (address.equals(image.getAddress())) {
 				image.setNbRequest(image.getNbRequest() - 1);
 				break;
 			}
 		}
+
+		return 1;
 	}
 
 	public static void main(String args[]) {
@@ -93,13 +96,15 @@ public class AutonomicManager {
 				if ("Moskaland".equals(server.getName())) {
 					System.out.println("VMO found");
 					System.out.println("VMO host" + server.getHost());
-					manager.setVM0(new utils.Image(server.getId(),2001,args[0]));
-					manager.getImages().add(new utils.Image(server.getId()));
+					manager.setVM0(new utils.Image(args[0],2001,server.getId()));
 					break;
 				}
 			}
 		} while(manager.getVM0() == null);
+			
+		manager.addVM();
 		
+			
 		while (true) {
 
 			int nbsatures = 0;
@@ -140,7 +145,15 @@ public class AutonomicManager {
 		// Boot and wait for the server
 		Server server = os.compute().servers().bootAndWaitActive(serverCreate, 6000);
 		System.out.println("WN created");
+		
 
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		// Get the address of the WN
 		Map<String, List<? extends Address>> addresses = server.getAddresses().getAddresses();
 		String addressServer = addresses.get("private").get(0).getAddr();
@@ -148,14 +161,14 @@ public class AutonomicManager {
 		String id = server.getId();
 		images.add(new utils.Image(id, 8080, addressServer));
 		System.out.println("Addition of calculator with port 8080 address " + addressServer + " and id " + id);
-		String [] args = {getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", addressServer, Integer.toString(8080) };
+		String [] args = {getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", Integer.toString(8080), addressServer };
 		UpdateRepartitor.main(args);
 	}
 
 	/**
 	 * Authenticate to Cloudmip
 	 * 
-	 * @return OSClient
+	 @* @return OSClient
 	 */
 	private OSClient connectCloudmip() {
 
