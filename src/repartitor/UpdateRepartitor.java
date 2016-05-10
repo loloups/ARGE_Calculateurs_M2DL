@@ -1,8 +1,10 @@
 package repartitor;
 
-import org.apache.xmlrpc.client.XmlRpcClient;
+import java.net.URL;
 
-import utils.XmlRpcUtil;
+import org.apache.xmlrpc.client.XmlRpcClient;
+import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.apache.xmlrpc.client.XmlRpcCommonsTransportFactory;
 
 public class UpdateRepartitor {
 
@@ -13,20 +15,18 @@ public class UpdateRepartitor {
         }
         else {
             try {
+            	XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
+    			config.setServerURL(new URL("http://" + args[0] + ":"+args[1]+"/xmlrpc"));
+    			config.setEnabledForExtensions(true);
+    			config.setConnectionTimeout(60 * 1000);
+    			config.setReplyTimeout(60 * 1000);
+    			XmlRpcClient clientManager = new XmlRpcClient();
+    			clientManager.setTransportFactory(
+    	                new XmlRpcCommonsTransportFactory(clientManager));
+    			clientManager.setConfig(config);
 
-                XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(args[0], Integer.parseInt(args[1]));
-
-                String action = args[2];
-                System.out.println(action);
-
-                if (action.equals("add")) {
-                    Object[] params = new Object[] { new Integer(args[3]) };
-                    client.execute("Repartitor." + action, params);
-                }
-                else if (action.equals("del")) {
-                    Object[] params = new Object[] { args[3] };
-                    client.execute("Repartitor." + action, params);
-                }
+				Object[] params = new Object[] { new Integer(args[3]), args[4] };
+				clientManager.execute("Repartitor." + args[2], params);
 
             }
             catch (Exception e) {

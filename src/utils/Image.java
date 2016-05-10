@@ -1,6 +1,7 @@
 package utils;
 
 public class Image {
+	public enum State{ACTIVE,TO_DELETE};
 	
 	public static final int NB_MAX_REQUEST = 100;
 	
@@ -8,6 +9,7 @@ public class Image {
 	private int port;
 	private int nbRequest;
 	private String id;
+	private State state;
 	
 	public Image(String id) {
 		super();
@@ -15,6 +17,7 @@ public class Image {
 		this.port = 0;
 		this.id = id;
 		this.nbRequest = 0;
+		this.state = State.ACTIVE;
 	}
 	
 	
@@ -45,6 +48,15 @@ public class Image {
 		this.id = id;
 	}
 
+	public State getState() {
+		return state;
+	}
+
+
+	public void setState(State state) {
+		this.state = state;
+	}
+
 
 	public int getNbRequest() {
 		return nbRequest;
@@ -54,5 +66,4 @@ public class Image {
 	public void setNbRequest(int nbRequest) {
 		this.nbRequest = nbRequest;
 	}
-	
 }
