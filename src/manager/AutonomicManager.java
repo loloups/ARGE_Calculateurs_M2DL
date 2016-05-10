@@ -87,13 +87,14 @@ public class AutonomicManager {
 		// List all Images (detailed @see #list(boolean detailed) for brief)
 		do {
 			System.out.println("Searching for VMO");
-			List<? extends Image> images = os.compute().images().list();
+			List<? extends Server> servers = os.compute().servers().list();
 		
-			for (Image image : images) {
-				if ("Moskaland-Ubunutu".equals(image.getName())) {
+			for (Server server : servers) {
+				if ("Moskaland".equals(server.getName())) {
 					System.out.println("VMO found");
-					manager.setVM0(new utils.Image(image.getId(),2001,args[0]));
-					manager.getImages().add(new utils.Image(image.getId()));
+					System.out.println("VMO host" + server.getHost());
+					manager.setVM0(new utils.Image(server.getId(),2001,args[0]));
+					manager.getImages().add(new utils.Image(server.getId()));
 					break;
 				}
 			}
@@ -119,12 +120,10 @@ public class AutonomicManager {
 				}
 
 			}
-
 			if (nbsatures == manager.getImages().size()) {
 				// Je cree un VM
 				manager.addVM();
 			}
-
 		}
 
 	}
