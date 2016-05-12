@@ -1,6 +1,7 @@
 package manager;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -10,6 +11,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.apache.xmlrpc.client.XmlRpcClient;
+import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.apache.xmlrpc.client.XmlRpcCommonsTransportFactory;
 import org.apache.xmlrpc.webserver.WebServer;
 import org.openstack4j.api.Builders;
 import org.openstack4j.api.OSClient;
@@ -19,51 +23,30 @@ import org.openstack4j.model.compute.ServerCreate;
 import org.openstack4j.openstack.OSFactory;
 
 import repartitor.UpdateRepartitor;
-import utils.Image.State;
+import utils.WorkerNode.State;
 import utils.XmlRpcUtil;
 
 public class AutonomicManager {
 
-	private Set<utils.Image> images;
-	private utils.Image VM0;
+	private Set<utils.WorkerNode> images;
+	private utils.WorkerNode VM0;
 
 	public AutonomicManager() {
-		this.images = Collections.newSetFromMap(new ConcurrentHashMap<utils.Image, Boolean>());
+		this.images = Collections.newSetFromMap(new ConcurrentHashMap<utils.WorkerNode, Boolean>());
 	}
 
-	public Set<utils.Image> getImages() {
+	public Set<utils.WorkerNode> getImages() {
 		return images;
 	}
 
-	public utils.Image getVM0() {
+	public utils.WorkerNode getVM0() {
 		return VM0;
 	}
 
-	public void setVM0(utils.Image vM0) {
+	public void setVM0(utils.WorkerNode vM0) {
 		VM0 = vM0;
 	}
 
-	public int incr(String address, int port) {
-		for (utils.Image image : this.getImages()) {
-			if (address.equals(image.getAddress())) {
-				image.setNbRequest(image.getNbRequest() + 1);
-				break;
-			}
-		}
-		return 1;
-
-	}
-
-	public int decr(String address, int port) {
-		for (utils.Image image : this.getImages()) {
-			if (address.equals(image.getAddress())) {
-				image.setNbRequest(image.getNbRequest() - 1);
-				break;
-			}
-		}
-
-		return 1;
-	}
 
 	public static void main(String args[]) {
 
@@ -86,11 +69,11 @@ public class AutonomicManager {
 			List<? extends Server> servers = os.compute().servers().list();
 
 			for (Server server : servers) {
-				if ("Moskaland".equals(server.getName())) {
+				if ("Moskaland-VM0".equals(server.getName())) {
 					if(server.getAddresses().getAddresses() != null) {
 						System.out.println("VMO found");
 						System.out.println("VMO address" + server.getAddresses().getAddresses().get("private").get(0).getAddr());
-						manager.setVM0(new utils.Image(server.getAddresses().getAddresses().get("private").get(0).getAddr(),
+						manager.setVM0(new utils.WorkerNode(server.getAddresses().getAddresses().get("private").get(0).getAddr(),
 								2001, server.getId()));
 						break;
 					}
@@ -101,26 +84,43 @@ public class AutonomicManager {
 		manager.addVM(os);
 
 		while (true) {
-
 			int nbsatures = 0;
-			for (utils.Image image : manager.getImages()) {
-				if (image.getNbRequest() >= 0.90 * utils.Image.NB_MAX_REQUEST) {
-					nbsatures++;
-				} else if (image.getNbRequest() < 0.1 * utils.Image.NB_MAX_REQUEST) {
-					if (manager.getImages().size() > 1) {
-						if (State.ACTIVE.name().equals(image.getState().name())) {
-							image.setState(State.TO_DELETE);
-							String[] argsUpRep = { manager.getVM0().getAddress(),
-									Integer.toString(manager.getVM0().getPort()), "del", image.getAddress(),
-									Integer.toString(image.getPort()) };
-							UpdateRepartitor.main(argsUpRep);
-						}
-						if (State.TO_DELETE.name().equals(image.getState().name()) && image.getNbRequest() == 0) {
-							manager.deleteVM(image.getId(), os);
+			for (utils.WorkerNode image : manager.getImages()) {			
+				try {
+					XmlRpcClientConfigImpl configCalc = new XmlRpcClientConfigImpl();
+		            configCalc.setServerURL(new URL("http://" + image.getAddress() + ":"+image.getPort()+"/xmlrpc"));
+		            configCalc.setEnabledForExtensions(true);
+		            configCalc.setConnectionTimeout(60 * 1000);
+		            configCalc.setReplyTimeout(60 * 1000);
+
+		            XmlRpcClient client = new XmlRpcClient();
+
+		            client.setTransportFactory(
+		                new XmlRpcCommonsTransportFactory(client));
+		            client.setConfig(configCalc);				
+		            Object[] params = new Object[] {};
+		            double cpuUsage  = (double)client.execute("Calculator.getLoad", params);
+					
+					if (cpuUsage > 90.0) {
+						nbsatures++;
+					} else if (cpuUsage < 10.0) {
+						if (manager.getImages().size() > 1) {
+							if (State.ACTIVE.name().equals(image.getState().name())) {
+								image.setState(State.TO_DELETE);
+								String[] argsUpRep = { manager.getVM0().getAddress(),
+										Integer.toString(manager.getVM0().getPort()), "del", image.getAddress(),
+										Integer.toString(image.getPort()) };
+								UpdateRepartitor.main(argsUpRep);
+							}
+							if (State.TO_DELETE.name().equals(image.getState().name()) && cpuUsage < 1.0) {
+								manager.deleteVM(image.getId(), os);
+							}
 						}
 					}
+					
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-
 			}
 			if (nbsatures == manager.getImages().size()) {
 				// Je cree un VM
@@ -157,7 +157,7 @@ public class AutonomicManager {
 		String addressServer = addresses.get("private").get(0).getAddr();
 
 		String id = server.getId();
-		images.add(new utils.Image(id, 8080, addressServer));
+		images.add(new utils.WorkerNode(id, 8080, addressServer));
 		System.out.println("Addition of calculator with port 8080 address " + addressServer + " and id " + id);
 		String[] args = { getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", Integer.toString(8080),
 				addressServer };
