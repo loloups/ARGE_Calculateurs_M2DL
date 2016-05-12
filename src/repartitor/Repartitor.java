@@ -86,7 +86,7 @@ public class Repartitor {
 	}
 
 	public static void main(String[] args) throws Exception {
-		if(args.length != 2) {
+		if(args.length != 1) {
 			System.err.println("Repartitor needs exactly 1 parameter to start : repartitor port.");
 		}
 		else {
