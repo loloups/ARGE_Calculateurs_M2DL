@@ -3,6 +3,7 @@ package manager;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,11 +26,9 @@ public class AutonomicManager {
 
 	private Set<utils.Image> images;
 	private utils.Image VM0;
-	private OSClient os;
 
 	public AutonomicManager() {
 		this.images = Collections.newSetFromMap(new ConcurrentHashMap<utils.Image, Boolean>());
-		this.os = connectCloudmip();
 	}
 
 	public Set<utils.Image> getImages() {
@@ -42,10 +41,6 @@ public class AutonomicManager {
 
 	public void setVM0(utils.Image vM0) {
 		VM0 = vM0;
-	}
-
-	public OSClient getOs() {
-		return os;
 	}
 
 	public int incr(String address, int port) {
@@ -83,27 +78,28 @@ public class AutonomicManager {
 		} catch (IOException | XmlRpcException e) {
 			e.printStackTrace();
 		}
-		OSClient os = OSFactory.builder().endpoint("http://195.220.53.61:5000/v2.0").credentials("ens30", "74J2O1")
-				.tenantName("service").authenticate();
+		OSClient os = manager.connectCloudmip();
 
 		// List all Images (detailed @see #list(boolean detailed) for brief)
 		do {
 			System.out.println("Searching for VMO");
 			List<? extends Server> servers = os.compute().servers().list();
-		
+
 			for (Server server : servers) {
 				if ("Moskaland".equals(server.getName())) {
-					System.out.println("VMO found");
-					System.out.println("VMO host" + server.getHost());
-					manager.setVM0(new utils.Image(args[0],2001,server.getId()));
-					break;
+					if(server.getAddresses().getAddresses() != null) {
+						System.out.println("VMO found");
+						System.out.println("VMO address" + server.getAddresses().getAddresses().get("private").get(0).getAddr());
+						manager.setVM0(new utils.Image(server.getAddresses().getAddresses().get("private").get(0).getAddr(),
+								2001, server.getId()));
+						break;
+					}
 				}
 			}
-		} while(manager.getVM0() == null);
-			
-		manager.addVM();
-		
-			
+		} while (manager.getVM0() == null);
+
+		manager.addVM(os);
+
 		while (true) {
 
 			int nbsatures = 0;
@@ -114,11 +110,13 @@ public class AutonomicManager {
 					if (manager.getImages().size() > 1) {
 						if (State.ACTIVE.name().equals(image.getState().name())) {
 							image.setState(State.TO_DELETE);
-							String [] argsUpRep = {manager.getVM0().getAddress(), Integer.toString(manager.getVM0().getPort()), "del", image.getAddress(), Integer.toString(image.getPort()) };
+							String[] argsUpRep = { manager.getVM0().getAddress(),
+									Integer.toString(manager.getVM0().getPort()), "del", image.getAddress(),
+									Integer.toString(image.getPort()) };
 							UpdateRepartitor.main(argsUpRep);
 						}
 						if (State.TO_DELETE.name().equals(image.getState().name()) && image.getNbRequest() == 0) {
-							manager.deleteVM(image.getId());
+							manager.deleteVM(image.getId(), os);
 						}
 					}
 				}
@@ -126,33 +124,34 @@ public class AutonomicManager {
 			}
 			if (nbsatures == manager.getImages().size()) {
 				// Je cree un VM
-				manager.addVM();
+				manager.addVM(os);
 			}
 		}
 
 	}
 
-	public void addVM() {
+	public void addVM(OSClient os) {
 
 		// Create a Server Model Object
 		List<String> networks = Arrays.asList("c1445469-4640-4c5a-ad86-9c0cb6650cca");
 
-		String name = "Moskito_" + images.size();
+		String name = "Moskito_" + (new Date()).getTime();
 		ServerCreate serverCreate = Builders.server().name(name).flavor("2")
 				.image("652e70e5-48d0-40d0-a725-5aa12680ba20").networks(networks).keypairName("MoskitoKey").build();
 
 		// Boot and wait for the server
 		Server server = os.compute().servers().bootAndWaitActive(serverCreate, 6000);
 		System.out.println("WN created");
-		
 
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		//Wait server's boot end
+		while(server.getAddresses().getAddresses() == null) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-		
+
 		// Get the address of the WN
 		Map<String, List<? extends Address>> addresses = server.getAddresses().getAddresses();
 		String addressServer = addresses.get("private").get(0).getAddr();
@@ -160,16 +159,17 @@ public class AutonomicManager {
 		String id = server.getId();
 		images.add(new utils.Image(id, 8080, addressServer));
 		System.out.println("Addition of calculator with port 8080 address " + addressServer + " and id " + id);
-		String [] args = {getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", Integer.toString(8080), addressServer };
+		String[] args = { getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", Integer.toString(8080),
+				addressServer };
 		UpdateRepartitor.main(args);
 	}
 
 	/**
 	 * Authenticate to Cloudmip
 	 * 
-	 @* @return OSClient
+	 * @* @return OSClient
 	 */
-	private OSClient connectCloudmip() {
+	public OSClient connectCloudmip() {
 
 		OSClient os = OSFactory.builder().endpoint("http://195.220.53.61:5000/v2.0").credentials("ens30", "74J2O1")
 				.tenantName("service").authenticate();
@@ -179,7 +179,7 @@ public class AutonomicManager {
 		return os;
 	}
 
-	private void deleteVM(String id) {
+	private void deleteVM(String id, OSClient os) {
 		os.compute().servers().delete(id);
 		System.out.println("Deletion of webserver " + id);
 	}
