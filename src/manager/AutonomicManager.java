@@ -13,7 +13,6 @@ import org.apache.xmlrpc.webserver.WebServer;
 import org.openstack4j.api.Builders;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.model.compute.Address;
-import org.openstack4j.model.compute.Image;
 import org.openstack4j.model.compute.Server;
 import org.openstack4j.model.compute.ServerCreate;
 import org.openstack4j.openstack.OSFactory;
