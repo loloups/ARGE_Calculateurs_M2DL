@@ -3,10 +3,8 @@ package utils;
 import org.apache.xmlrpc.XmlRpcRequest;
 import org.apache.xmlrpc.client.AsyncCallback;
 
-import calculator.CalculatorDetails;
-
 public class ClientCallback implements AsyncCallback {
-	
+
 	public ClientCallback() {
 		super();
 	}

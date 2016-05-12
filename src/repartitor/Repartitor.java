@@ -1,10 +1,13 @@
 package repartitor;
 
+import java.net.URL;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.xmlrpc.client.XmlRpcClient;
+import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.apache.xmlrpc.client.XmlRpcCommonsTransportFactory;
 import org.apache.xmlrpc.webserver.WebServer;
 
 import calculator.CalculatorDetails;
@@ -21,7 +24,6 @@ public class Repartitor {
 			calculators.add(new CalculatorDetails(address,port));
 			System.out.println("Addition of calculator with port : "+port.toString());
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -38,11 +40,11 @@ public class Repartitor {
 			    }
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return true;
 	}
+	
 	
 	public int send(int i) {
 		int result = -1;
@@ -50,7 +52,7 @@ public class Repartitor {
 			CalculatorDetails calculatorDetails = null;
 			int numCal = 0;
 			for (CalculatorDetails calculator : calculators) {
-				if(i == curCalculator){
+				if(numCal == curCalculator){
 					calculatorDetails = calculator;
 				}
 				numCal++;
@@ -58,9 +60,22 @@ public class Repartitor {
 			
 			if(calculatorDetails != null){
 				System.out.println("Current calculator"+curCalculator);
-				XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(calculatorDetails.getAddress(), calculatorDetails.getPort());
-				Object[] params = new Object[] { new Integer(i), new Integer(i + 1) };
+				//Call Calculator
+				XmlRpcClientConfigImpl configCalc = new XmlRpcClientConfigImpl();
+	            configCalc.setServerURL(new URL("http://" + calculatorDetails.getAddress() + ":"+calculatorDetails.getPort()+"/xmlrpc"));
+	            configCalc.setEnabledForExtensions(true);
+	            configCalc.setConnectionTimeout(60 * 1000);
+	            configCalc.setReplyTimeout(60 * 1000);
+
+	            XmlRpcClient client = new XmlRpcClient();
+
+	            client.setTransportFactory(
+	                new XmlRpcCommonsTransportFactory(client));
+	            client.setConfig(configCalc);				
+	            Object[] params = new Object[] { new Integer(i), new Integer(i + 1) };
 				client.executeAsync("Calculator.add", params, new ClientCallback());
+				
+				
 				curCalculator = (curCalculator+1) % (calculators.size());
 			}
 		} catch (Exception e) {
@@ -71,7 +86,7 @@ public class Repartitor {
 	}
 
 	public static void main(String[] args) throws Exception {
-		if(args.length != 1) {
+		if(args.length != 2) {
 			System.err.println("Repartitor needs exactly 1 parameter to start : repartitor port.");
 		}
 		else {
@@ -81,7 +96,6 @@ public class Repartitor {
 			XmlRpcUtil.createXmlRpcServer(webServer, "RepartitorHandlers.properties");
 			calculators = Collections.newSetFromMap(new ConcurrentHashMap<CalculatorDetails, Boolean>());
 			webServer.start();
-
 			System.out.println("Repartitor is ready and is now accepting requests.");
 			System.out.println("Halt program to stop server.");
 		}
