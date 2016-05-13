@@ -108,8 +108,8 @@ public class AutonomicManager {
 							if (State.ACTIVE.name().equals(image.getState().name())) {
 								image.setState(State.TO_DELETE);
 								String[] argsUpRep = { manager.getVM0().getAddress(),
-										Integer.toString(manager.getVM0().getPort()), "del", image.getAddress(),
-										Integer.toString(image.getPort()) };
+										Integer.toString(manager.getVM0().getPort()), "del", Integer.toString(image.getPort()), 
+								image.getAddress() };
 								UpdateRepartitor.main(argsUpRep);
 							}
 							if (State.TO_DELETE.name().equals(image.getState().name()) && cpuUsage < 1.0) {
@@ -137,14 +137,14 @@ public class AutonomicManager {
 
 		String name = "Moskito_" + (new Date()).getTime();
 		ServerCreate serverCreate = Builders.server().name(name).flavor("2")
-				.image("652e70e5-48d0-40d0-a725-5aa12680ba20").networks(networks).keypairName("MoskitoKey").build();
+				.image("2eea8d47-1ab2-40d3-b23c-e99d8cd35af5").networks(networks).keypairName("MoskitoKey").build();
 
 		// Boot and wait for the server
 		Server server = os.compute().servers().bootAndWaitActive(serverCreate, 6000);
 		System.out.println("WN created");
 
 		//Wait server's boot end
-		while(server.getAddresses().getAddresses() == null) {
+		while(server.getAddresses().getAddresses().get("private") == null) {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
@@ -157,7 +157,7 @@ public class AutonomicManager {
 		String addressServer = addresses.get("private").get(0).getAddr();
 
 		String id = server.getId();
-		images.add(new utils.WorkerNode(id, 8080, addressServer));
+		images.add(new utils.WorkerNode(addressServer, 8080, id));
 		System.out.println("Addition of calculator with port 8080 address " + addressServer + " and id " + id);
 		String[] args = { getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", Integer.toString(8080),
 				addressServer };
