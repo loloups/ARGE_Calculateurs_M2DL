@@ -49,6 +49,7 @@ public class Operator {
 						//System.out.println("The result of (" + i + " + " + new Integer(i+1) + ") is " + result + ".");
 					}
 					System.out.println("1 second left ...");
+					Thread.sleep(1000);
 				}
 
 			}catch(Exception e) {
