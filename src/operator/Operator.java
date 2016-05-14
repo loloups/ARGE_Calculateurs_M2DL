@@ -10,6 +10,12 @@ public class Operator {
 
 	public static int numberRequestsPerSecond;
 
+	public int receive(int i) {
+		System.out.println(i);
+		return i;
+	}	
+
+
 	public int setNumberRequestsPerSecond(int load) {
 		System.out.println("Change load from " + numberRequestsPerSecond + " to " + load);
 		numberRequestsPerSecond = load;
