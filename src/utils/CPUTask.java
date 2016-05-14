@@ -37,6 +37,7 @@ public class CPUTask extends TimerTask {
             	Calculator.load = 100. * totalDelta / timeDelta / cpuCount;
                 prevPc = curPc;
             }
+	    System.out.println("Load :"+Calculator.load);
         } catch (SigarException ex) {
             throw new RuntimeException(ex);
         }
