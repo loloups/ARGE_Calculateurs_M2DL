@@ -137,7 +137,7 @@ public class AutonomicManager {
 
 		String name = "Moskito_" + (new Date()).getTime();
 		ServerCreate serverCreate = Builders.server().name(name).flavor("2")
-				.image("2eea8d47-1ab2-40d3-b23c-e99d8cd35af5").networks(networks).keypairName("MoskitoKey").build();
+				.image("349d4944-29a9-48ee-9d16-bb6f1f6f7cd7").networks(networks).keypairName("MoskitoKey").build();
 
 		// Boot and wait for the server
 		Server server = os.compute().servers().bootAndWaitActive(serverCreate, 6000);
