@@ -1,28 +1,26 @@
 package calculator;
 
-import java.util.Timer;
-
 import org.apache.xmlrpc.webserver.WebServer;
+import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.SigarException;
 
-import utils.CPUTask;
 import utils.XmlRpcUtil;
 
 public class Calculator {
 	
-	public static double load = 50;
+	public static Sigar sigar = new Sigar();
     
 	public int add(int a, int b) {
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 		return a + b;
 	}
 	
 	public double getLoad() {
-		System.out.println("Current CPU : "+load);
-		return load;
+		try {
+		return sigar.getCpuPerc().getCombined()*100;
+		} catch (SigarException e) {
+			e.printStackTrace();
+		}
+		return 50.0;
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -31,8 +29,6 @@ public class Calculator {
 		}
 		else {
 			
-	        new Timer(true).schedule(new CPUTask(), 0, 1000);
-		
 			System.out.println("Attenmpting to start Web server ...");
 
 			WebServer webServer = new WebServer(Integer.parseInt(args[0]));
