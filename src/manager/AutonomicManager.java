@@ -95,6 +95,13 @@ public class AutonomicManager {
 		} while (manager.getVM0() == null);
 
 		manager.addVM(os);
+       		 try {
+           		 Thread.sleep(5000);
+        	}
+       	 	catch (InterruptedException e1) {
+          	  // TODO Auto-generated catch block
+        	    e1.printStackTrace();
+	        }
 
 		while (true) {
 			int nbsatures = 0;
@@ -112,11 +119,18 @@ public class AutonomicManager {
 		                new XmlRpcCommonsTransportFactory(client));
 		            client.setConfig(configCalc);				
 		            Object[] params = new Object[0];
-		            double cpuUsage  = (double)client.execute("Calculator.getLoad", params);
-			System.out.println("LOAD :"+cpuUsage);		
-					if (cpuUsage > 90.0) {
+		            int cpuUsageTotal = 0;
+		            for (int i=0; i<5; i++) {
+	                	    double cpuUsage  = (double)client.execute("Calculator.getLoad", params);
+	        	            System.out.println("LOAD :"+cpuUsage);    
+		                    cpuUsageTotal += cpuUsage;
+		            	Thread.sleep(1000);
+				}
+
+				
+					if (cpuUsageTotal > 90.0*5.0) {
 						nbsatures++;
-					} else if (cpuUsage < 10.0) {
+					} else if (cpuUsageTotal < 10.0*5.0) {
 						if (manager.getImages().size() > 1) {
 							if (State.ACTIVE.name().equals(image.getState().name())) {
 								image.setState(State.TO_DELETE);
@@ -125,7 +139,7 @@ public class AutonomicManager {
 								image.getAddress() };
 								UpdateRepartitor.main(argsUpRep);
 							}
-							if (State.TO_DELETE.name().equals(image.getState().name()) && cpuUsage < 1.0) {
+							if (State.TO_DELETE.name().equals(image.getState().name()) && cpuUsageTotal < 1.0*5.0) {
 								manager.deleteVM(image.getId(), os);
 							}
 						}
