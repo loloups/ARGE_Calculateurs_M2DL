@@ -32,7 +32,7 @@ public class XmlRpcUtil {
 		clientConfig.setServerURL(new URL(urlAsString));
 		clientConfig.setEnabledForExtensions(true);  
 		clientConfig.setConnectionTimeout(60000);
-		clientConfig.setReplyTimeout(60000);
+		clientConfig.setReplyTimeout(300000);
 
 		return clientConfig;
 	}
