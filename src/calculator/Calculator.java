@@ -1,19 +1,28 @@
 package calculator;
 
+import java.util.Timer;
+
 import org.apache.xmlrpc.webserver.WebServer;
 
+import utils.CPUTask;
 import utils.XmlRpcUtil;
 
 public class Calculator {
-
+	
+	public static double load = 50;
+    
 	public int add(int a, int b) {
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return a + b;
+	}
+	
+	public double getLoad() {
+		System.out.println("Current CPU : "+load);
+		return load;
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -21,6 +30,8 @@ public class Calculator {
 			System.err.println("Calculator needs exactly 1 parameter to start : port of local machine.");
 		}
 		else {
+			
+	        new Timer(true).schedule(new CPUTask(), 0, 1000);
 		
 			System.out.println("Attenmpting to start Web server ...");
 
