@@ -18,6 +18,7 @@ import org.apache.xmlrpc.webserver.WebServer;
 import org.openstack4j.api.Builders;
 import org.openstack4j.api.OSClient;
 import org.openstack4j.model.compute.Address;
+import org.openstack4j.model.compute.Image;
 import org.openstack4j.model.compute.Server;
 import org.openstack4j.model.compute.ServerCreate;
 import org.openstack4j.openstack.OSFactory;
@@ -31,7 +32,11 @@ public class AutonomicManager {
 	private Set<utils.WorkerNode> images;
 	private utils.WorkerNode VM0;
 
+
+	private String idImageCalc;
+
 	public AutonomicManager() {
+		idImageCalc = null;
 		this.images = Collections.newSetFromMap(new ConcurrentHashMap<utils.WorkerNode, Boolean>());
 	}
 
@@ -45,6 +50,14 @@ public class AutonomicManager {
 
 	public void setVM0(utils.WorkerNode vM0) {
 		VM0 = vM0;
+	}
+
+	public String getIdImageCalc() {
+		return idImageCalc;
+	}
+
+	public void setIdImageCalc(String idImageCalc) {
+		this.idImageCalc = idImageCalc;
 	}
 
 
@@ -90,17 +103,17 @@ public class AutonomicManager {
 					XmlRpcClientConfigImpl configCalc = new XmlRpcClientConfigImpl();
 		            configCalc.setServerURL(new URL("http://" + image.getAddress() + ":"+image.getPort()+"/xmlrpc"));
 		            configCalc.setEnabledForExtensions(true);
-		            configCalc.setConnectionTimeout(60 * 1000);
-		            configCalc.setReplyTimeout(60 * 1000);
+		            configCalc.setConnectionTimeout(300 * 1000);
+		            configCalc.setReplyTimeout(300 * 1000);
 
 		            XmlRpcClient client = new XmlRpcClient();
 
 		            client.setTransportFactory(
 		                new XmlRpcCommonsTransportFactory(client));
 		            client.setConfig(configCalc);				
-		            Object[] params = new Object[] {};
+		            Object[] params = new Object[0];
 		            double cpuUsage  = (double)client.execute("Calculator.getLoad", params);
-					
+			System.out.println("LOAD :"+cpuUsage);		
 					if (cpuUsage > 90.0) {
 						nbsatures++;
 					} else if (cpuUsage < 10.0) {
@@ -126,18 +139,38 @@ public class AutonomicManager {
 				// Je cree un VM
 				manager.addVM(os);
 			}
+
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 	}
 
 	public void addVM(OSClient os) {
+		
 
+		if(getIdImageCalc() == null) {
+			List<? extends Image> images = os.compute().images().list();
+			for (Image image : images) {
+				if ("MoskitoImageCalculator".equals(image.getName())) {
+					System.out.println("Image found");
+					setIdImageCalc(image.getId());
+					break;
+				}
+			}
+		}
+
+		
 		// Create a Server Model Object
 		List<String> networks = Arrays.asList("c1445469-4640-4c5a-ad86-9c0cb6650cca");
 
 		String name = "Moskito_" + (new Date()).getTime();
 		ServerCreate serverCreate = Builders.server().name(name).flavor("2")
-				.image("2eea8d47-1ab2-40d3-b23c-e99d8cd35af5").networks(networks).keypairName("MoskitoKey").build();
+				.image(getIdImageCalc()).networks(networks).build();
 
 		// Boot and wait for the server
 		Server server = os.compute().servers().bootAndWaitActive(serverCreate, 6000);
@@ -162,6 +195,13 @@ public class AutonomicManager {
 		String[] args = { getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", Integer.toString(8080),
 				addressServer };
 		UpdateRepartitor.main(args);
+
+		//Wait for web server calculator start
+		try {
+                                Thread.sleep(20000);
+                        } catch (InterruptedException e) {
+                                e.printStackTrace();
+                        }
 	}
 
 	/**
