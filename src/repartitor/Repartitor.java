@@ -64,8 +64,8 @@ public class Repartitor {
 				XmlRpcClientConfigImpl configCalc = new XmlRpcClientConfigImpl();
 	            configCalc.setServerURL(new URL("http://" + calculatorDetails.getAddress() + ":"+calculatorDetails.getPort()+"/xmlrpc"));
 	            configCalc.setEnabledForExtensions(true);
-	            configCalc.setConnectionTimeout(60 * 1000);
-	            configCalc.setReplyTimeout(60 * 1000);
+	            configCalc.setConnectionTimeout(300 * 1000);
+	            configCalc.setReplyTimeout(300 * 1000);
 
 	            XmlRpcClient client = new XmlRpcClient();
 
@@ -86,7 +86,7 @@ public class Repartitor {
 	}
 
 	public static void main(String[] args) throws Exception {
-		if(args.length != 2) {
+		if(args.length != 1) {
 			System.err.println("Repartitor needs exactly 1 parameter to start : repartitor port.");
 		}
 		else {
