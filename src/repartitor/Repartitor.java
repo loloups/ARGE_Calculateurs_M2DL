@@ -48,7 +48,6 @@ public class Repartitor {
 	
 	public int send(int i) {
 		int result = -1;
-	//	ClientCallback callback = new ClientCallback();
 		try {
 			CalculatorDetails calculatorDetails = null;
 			int numCal = 0;
@@ -74,8 +73,7 @@ public class Repartitor {
 	                new XmlRpcCommonsTransportFactory(client));
 	            client.setConfig(configCalc);				
 	            Object[] params = new Object[] { new Integer(i), new Integer(i + 1) };
-				client.executeAsync("Calculator.add", params, new ClientCallback(client));
-				
+				client.executeAsync("Calculator.add", params, new ClientCallback());
 				
 				curCalculator = (curCalculator+1) % (calculators.size());
 			}

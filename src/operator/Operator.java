@@ -3,8 +3,8 @@ package operator;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.webserver.WebServer;
 
+import utils.OperatorCallback;
 import utils.XmlRpcUtil;
-import utils.ClientCallback;
 
 public class Operator {
 
@@ -51,7 +51,7 @@ public class Operator {
 				while(true) {
 					for(int i=0; i< getNumberRequestsPerSecond() ;i++) {
 						Object[] params = new Object[] {new Integer(i)};
-						client.executeAsync("Repartitor.send", params, new ClientCallback());
+						client.executeAsync("Repartitor.send", params, new OperatorCallback("send"));
 						//System.out.println("The result of (" + i + " + " + new Integer(i+1) + ") is " + result + ".");
 					}
 					System.out.println("1 second left ...");
