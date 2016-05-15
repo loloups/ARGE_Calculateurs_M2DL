@@ -1,7 +1,6 @@
 package manager;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -11,9 +10,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.xmlrpc.XmlRpcException;
-import org.apache.xmlrpc.client.XmlRpcClient;
-import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
-import org.apache.xmlrpc.client.XmlRpcCommonsTransportFactory;
 import org.apache.xmlrpc.webserver.WebServer;
 import org.openstack4j.api.Builders;
 import org.openstack4j.api.OSClient;
@@ -24,30 +20,31 @@ import org.openstack4j.model.compute.ServerCreate;
 import org.openstack4j.openstack.OSFactory;
 
 import repartitor.UpdateRepartitor;
+import utils.WorkerNode;
 import utils.WorkerNode.State;
 import utils.XmlRpcUtil;
 
 public class AutonomicManager {
 
-    private Set<utils.WorkerNode> images;
-    private utils.WorkerNode      VM0;
+    private Set<WorkerNode> workerNodes;
+    private WorkerNode      VM0;
 
     private String idImageCalc;
 
     public AutonomicManager() {
         idImageCalc = null;
-        this.images = Collections.newSetFromMap(new ConcurrentHashMap<utils.WorkerNode, Boolean>());
+        this.workerNodes = Collections.newSetFromMap(new ConcurrentHashMap<utils.WorkerNode, Boolean>());
     }
 
-    public Set<utils.WorkerNode> getImages() {
-        return images;
+    public Set<utils.WorkerNode> getWorkerNodes() {
+        return workerNodes;
     }
 
-    public utils.WorkerNode getVM0() {
+    public WorkerNode getVM0() {
         return VM0;
     }
 
-    public void setVM0(utils.WorkerNode vM0) {
+    public void setVM0(WorkerNode vM0) {
         VM0 = vM0;
     }
 
@@ -58,9 +55,15 @@ public class AutonomicManager {
     public void setIdImageCalc(String idImageCalc) {
         this.idImageCalc = idImageCalc;
     }
-    
+
+    /**
+     * Increments the number of requests of a worker node
+     * 
+     * @param address
+     * @param port
+     */
     public void incr(String address, int port) {
-        for (utils.WorkerNode image : this.getImages()) {
+        for (WorkerNode image : this.getWorkerNodes()) {
             if (address.equals(image.getAddress())) {
                 image.setNbRequest(image.getNbRequest() + 1);
                 break;
@@ -68,8 +71,14 @@ public class AutonomicManager {
         }
     }
 
+    /**
+     * Decrements the number of requests of a worker node
+     * 
+     * @param address
+     * @param port
+     */
     public void decr(String address, int port) {
-        for (utils.WorkerNode image : this.getImages()) {
+        for (WorkerNode image : this.getWorkerNodes()) {
             if (address.equals(image.getAddress())) {
                 image.setNbRequest(image.getNbRequest() - 1);
                 break;
@@ -77,23 +86,14 @@ public class AutonomicManager {
         }
     }
 
-    public static void main(String args[]) {
+    /**
+     * List all of the worker nodes
+     * 
+     * @param os
+     * @param manager
+     */
+    public static void listWorkerNodes(OSClient os, AutonomicManager manager) {
 
-        AutonomicManager manager = new AutonomicManager();
-
-        WebServer webServer = new WebServer(8080);
-        try {
-            XmlRpcUtil.createXmlRpcServer(webServer, "AutonomicManagerHandlers.properties");
-            webServer.start();
-            System.out.println("The manager has been started successfully and is now accepting requests.");
-            System.out.println("Halt program to stop server.");
-        }
-        catch (IOException | XmlRpcException e) {
-            e.printStackTrace();
-        }
-        OSClient os = manager.connectCloudmip();
-
-        // List all Images (detailed @see #list(boolean detailed) for brief)
         do {
             System.out.println("Searching for VMO");
             List<? extends Server> servers = os.compute().servers().list();
@@ -105,7 +105,7 @@ public class AutonomicManager {
                         System.out.println(
                             "VMO address" + server.getAddresses().getAddresses().get("private").get(0).getAddr());
                         manager.setVM0(
-                            new utils.WorkerNode(server.getAddresses().getAddresses().get("private").get(0).getAddr(),
+                            new WorkerNode(server.getAddresses().getAddresses().get("private").get(0).getAddr(),
                                 2001, server.getId()));
                         break;
                     }
@@ -113,25 +113,26 @@ public class AutonomicManager {
             }
         }
         while (manager.getVM0() == null);
+    }
 
-        manager.addVM(os);
-        try {
-            Thread.sleep(5000);
-        }
-        catch (InterruptedException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
+    /**
+     * Handle the addition and the deletion of the worker nodes. It depends on
+     * the number of requests handled by each worker node.
+     * 
+     * @param manager
+     * @param os
+     */
+    public static void handleWN(AutonomicManager manager, OSClient os) {
 
         while (true) {
 
             int nbsatures = 0;
-            for (utils.WorkerNode image : manager.getImages()) {
-                if (image.getNbRequest() >= 0.90 * utils.WorkerNode.NB_MAX_REQUEST) {
+            for (WorkerNode image : manager.getWorkerNodes()) {
+                if (image.getNbRequest() >= 0.90 * WorkerNode.NB_MAX_REQUEST) {
                     nbsatures++;
                 }
-                else if (image.getNbRequest() < 0.1 * utils.WorkerNode.NB_MAX_REQUEST) {
-                    if (manager.getImages().size() > 1) {
+                else if (image.getNbRequest() < 0.1 * WorkerNode.NB_MAX_REQUEST) {
+                    if (manager.getWorkerNodes().size() > 1) {
                         if (State.ACTIVE.name().equals(image.getState().name())) {
                             image.setState(State.TO_DELETE);
                             String[] argsUpRep = { manager.getVM0().getAddress(),
@@ -147,7 +148,7 @@ public class AutonomicManager {
 
             }
 
-            if (nbsatures == manager.getImages().size()) {
+            if (nbsatures == manager.getWorkerNodes().size()) {
                 // Je cree un VM
                 manager.addVM(os);
             }
@@ -160,11 +161,32 @@ public class AutonomicManager {
                 e.printStackTrace();
             }
         }
-
     }
 
+    /**
+     * Start the web server
+     */
+    public static void startWebServer() {
+        WebServer webServer = new WebServer(8080);
+        try {
+            XmlRpcUtil.createXmlRpcServer(webServer, "AutonomicManagerHandlers.properties");
+            webServer.start();
+            System.out.println("The manager has been started successfully and is now accepting requests.");
+            System.out.println("Halt program to stop server.");
+        }
+        catch (IOException | XmlRpcException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Add a new VM on the cloud
+     * 
+     * @param os
+     */
     public void addVM(OSClient os) {
 
+        // Get the image to use for the creation of the WN
         if (getIdImageCalc() == null) {
             List<? extends Image> images = os.compute().images().list();
             for (Image image : images) {
@@ -202,7 +224,7 @@ public class AutonomicManager {
         String addressServer = addresses.get("private").get(0).getAddr();
 
         String id = server.getId();
-        images.add(new utils.WorkerNode(addressServer, 8080, id));
+        workerNodes.add(new WorkerNode(addressServer, 8080, id));
         System.out.println("Addition of calculator with port 8080 address " + addressServer + " and id " + id);
         String[] args = { getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", Integer.toString(8080),
             addressServer };
@@ -215,6 +237,18 @@ public class AutonomicManager {
         catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Delete a VM on the cloud
+     * 
+     * @param id
+     * @param os
+     */
+    private void deleteVM(String id, OSClient os) {
+
+        os.compute().servers().delete(id);
+        System.out.println("Deletion of webserver " + id);
     }
 
     /**
@@ -232,9 +266,28 @@ public class AutonomicManager {
         return os;
     }
 
-    private void deleteVM(String id, OSClient os) {
-        os.compute().servers().delete(id);
-        System.out.println("Deletion of webserver " + id);
+    public static void main(String args[]) {
+
+        AutonomicManager manager = new AutonomicManager();
+
+        startWebServer();
+
+        OSClient os = manager.connectCloudmip();
+
+        listWorkerNodes(os, manager);
+
+        manager.addVM(os);
+
+        try {
+            Thread.sleep(5000);
+        }
+        catch (InterruptedException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        handleWN(manager, os);
+
     }
 
 }

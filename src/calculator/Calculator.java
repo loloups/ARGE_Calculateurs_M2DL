@@ -1,15 +1,11 @@
 package calculator;
 
 import org.apache.xmlrpc.webserver.WebServer;
-import org.hyperic.sigar.Sigar;
-import org.hyperic.sigar.SigarException;
 
 import utils.XmlRpcUtil;
 
 public class Calculator {
-	
-	public static Sigar sigar = new Sigar();
-    
+	    
 	public int add(int a, int b) {
 		return a + b;
 	}
@@ -20,7 +16,7 @@ public class Calculator {
 		}
 		else {
 			
-			System.out.println("Attenmpting to start Web server ...");
+			System.out.println("Attempting to start Web server ...");
 
 			WebServer webServer = new WebServer(Integer.parseInt(args[0]));
 			XmlRpcUtil.createXmlRpcServer(webServer, "CalculatorHandlers.properties");
