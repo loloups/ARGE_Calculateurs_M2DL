@@ -17,6 +17,7 @@ import utils.XmlRpcUtil;
 public class Repartitor {
 
 	public static Set<CalculatorDetails> calculators;
+	public static String adressManager;
 	public static int curCalculator = 0;
 	
 	public boolean add(Integer port, String address) {
@@ -59,6 +60,20 @@ public class Repartitor {
 			}
 			
 			if(calculatorDetails != null){
+			    
+			     //Call Autonomic to incr request
+                XmlRpcClientConfigImpl configManager = new XmlRpcClientConfigImpl();
+                configManager.setServerURL(new URL("http://" + adressManager + ":8080/xmlrpc"));
+                configManager.setEnabledForExtensions(true);
+                configManager.setConnectionTimeout(60 * 1000);
+                configManager.setReplyTimeout(60 * 1000);
+                XmlRpcClient clientManager = new XmlRpcClient();
+                clientManager.setTransportFactory(
+                        new XmlRpcCommonsTransportFactory(clientManager));
+                clientManager.setConfig(configManager);
+                Object[] paramsManager = new Object[] { calculatorDetails.getAddress(), calculatorDetails.getPort()};
+                clientManager.execute("Manager.incr", paramsManager);
+                
 				System.out.println("Current calculator"+curCalculator);
 				//Call Calculator
 				XmlRpcClientConfigImpl configCalc = new XmlRpcClientConfigImpl();
@@ -73,7 +88,7 @@ public class Repartitor {
 	                new XmlRpcCommonsTransportFactory(client));
 	            client.setConfig(configCalc);				
 	            Object[] params = new Object[] { new Integer(i), new Integer(i + 1) };
-				client.executeAsync("Calculator.add", params, new ClientCallback());
+				client.executeAsync("Calculator.add", params, new ClientCallback(calculatorDetails, adressManager));
 				
 				curCalculator = (curCalculator+1) % (calculators.size());
 			}
@@ -85,12 +100,13 @@ public class Repartitor {
 	}
 
 	public static void main(String[] args) throws Exception {
-		if(args.length != 1) {
-			System.err.println("Repartitor needs exactly 1 parameter to start : repartitor port.");
+		if(args.length != 2) {
+			System.err.println("Repartitor needs exactly 1 parameter to start : repartitor port and addressManager.");
 		}
 		else {
 			System.out.println("Attenmpting to start Repartitor web server ...");
 
+			adressManager = args[1];
 			WebServer webServer = new WebServer(Integer.parseInt(args[0]));
 			XmlRpcUtil.createXmlRpcServer(webServer, "RepartitorHandlers.properties");
 			calculators = Collections.newSetFromMap(new ConcurrentHashMap<CalculatorDetails, Boolean>());

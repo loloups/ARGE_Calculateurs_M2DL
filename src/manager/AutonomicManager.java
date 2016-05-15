@@ -58,6 +58,24 @@ public class AutonomicManager {
     public void setIdImageCalc(String idImageCalc) {
         this.idImageCalc = idImageCalc;
     }
+    
+    public void incr(String address, int port) {
+        for (utils.WorkerNode image : this.getImages()) {
+            if (address.equals(image.getAddress())) {
+                image.setNbRequest(image.getNbRequest() + 1);
+                break;
+            }
+        }
+    }
+
+    public void decr(String address, int port) {
+        for (utils.WorkerNode image : this.getImages()) {
+            if (address.equals(image.getAddress())) {
+                image.setNbRequest(image.getNbRequest() - 1);
+                break;
+            }
+        }
+    }
 
     public static void main(String args[]) {
 

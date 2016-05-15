@@ -10,10 +10,17 @@ import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 import org.apache.xmlrpc.client.XmlRpcCommonsTransportFactory;
 
+import calculator.CalculatorDetails;
+
 public class ClientCallback implements AsyncCallback {
 
-    public ClientCallback() {
+    private CalculatorDetails calculatorDetails;
+    private String            addressManager;
+
+    public ClientCallback(CalculatorDetails calculatorDetails, String address) {
         super();
+        this.calculatorDetails = calculatorDetails;
+        this.addressManager = address;
     }
 
     @Override
@@ -27,29 +34,40 @@ public class ClientCallback implements AsyncCallback {
         System.out.println("In result");
         System.out.println(request.getMethodName() + ": " + result);
 
-            try {
+        try {
 
-                XmlRpcClientConfigImpl configCalc = new XmlRpcClientConfigImpl();
-                configCalc.setServerURL(new URL("http://192.168.0.162:2000/xmlrpc"));
-                configCalc.setEnabledForExtensions(true);
-                configCalc.setConnectionTimeout(300 * 1000);
-                configCalc.setReplyTimeout(300 * 1000);
+            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
+            config.setServerURL(new URL("http://" + addressManager + ":8080/xmlrpc"));
+            config.setEnabledForExtensions(true);
+            config.setConnectionTimeout(60 * 1000);
+            config.setReplyTimeout(60 * 1000);
+            XmlRpcClient clientManager = new XmlRpcClient();
+            clientManager.setTransportFactory(
+                new XmlRpcCommonsTransportFactory(clientManager));
+            clientManager.setConfig(config);
+            Object[] params = new Object[] { calculatorDetails.getAddress(), calculatorDetails.getPort() };
+            clientManager.execute("Manager.decr", params);
 
-                XmlRpcClient client = new XmlRpcClient();
+            XmlRpcClientConfigImpl configCalc = new XmlRpcClientConfigImpl();
+            configCalc.setServerURL(new URL("http://192.168.0.162:2000/xmlrpc"));
+            configCalc.setEnabledForExtensions(true);
+            configCalc.setConnectionTimeout(300 * 1000);
+            configCalc.setReplyTimeout(300 * 1000);
 
-                client.setTransportFactory(
-                    new XmlRpcCommonsTransportFactory(client));
-                client.setConfig(configCalc);
+            XmlRpcClient client = new XmlRpcClient();
 
-                Object[] params = new Object[] { new Integer((int) result) };
+            client.setTransportFactory(
+                new XmlRpcCommonsTransportFactory(client));
+            client.setConfig(configCalc);
 
-                client.executeAsync("Operator.receive", params, new OperatorCallback("receive"));
-            }
-            catch (XmlRpcException | MalformedURLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        
+            Object[] paramsOperator = new Object[] { new Integer((int) result) };
+
+            client.executeAsync("Operator.receive", paramsOperator, new OperatorCallback("receive"));
+        }
+        catch (XmlRpcException | MalformedURLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
     }
 }
