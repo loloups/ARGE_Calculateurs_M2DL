@@ -13,15 +13,6 @@ public class Calculator {
 	public int add(int a, int b) {
 		return a + b;
 	}
-	
-	public double getLoad() {
-		try {
-		return sigar.getCpuPerc().getCombined()*100;
-		} catch (SigarException e) {
-			e.printStackTrace();
-		}
-		return 50.0;
-	}
 
 	public static void main(String[] args) throws Exception {
 		if(args.length != 1) {
