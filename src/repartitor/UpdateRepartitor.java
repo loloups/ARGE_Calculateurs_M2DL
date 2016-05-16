@@ -17,7 +17,7 @@ public class UpdateRepartitor {
                 
                 System.out.println("http://" + args[0] + ":"+args[1]+"/xmlrpc");
                 XmlRpcClient clientManager = XmlRpcUtil.createXmlRpcClient(args[0], Integer.parseInt(args[1]));
-				Object[] params = new Object[] { new Integer(args[3]), args[4] };
+				Object[] params = new Object[] { new Integer(args[4]), args[3] };
 				clientManager.execute("Repartitor." + args[2], params);
 
             }

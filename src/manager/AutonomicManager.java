@@ -29,6 +29,7 @@ public class AutonomicManager {
     private Set<WorkerNode>        workerNodes;
     private WorkerNode             VM0;
     public static AutonomicManager manager;
+public static boolean numberOfRequestModified;
 
     private String idImageCalc;
 
@@ -55,6 +56,12 @@ public class AutonomicManager {
 
     public void setIdImageCalc(String idImageCalc) {
         this.idImageCalc = idImageCalc;
+    }
+
+    public boolean setNumberOfRequestModified(boolean modified) {
+        numberOfRequestModified = modified;
+System.out.println("yolo");
+	return true;
     }
 
     /**
@@ -130,15 +137,23 @@ public class AutonomicManager {
 
         while (true) {
 
+
+	if (numberOfRequestModified) {
+		System.out.println("yolo");
+}
             int nbsatures = 0;
+
+	
             for (WorkerNode image : manager.getWorkerNodes()) {
 
                 System.out.println(image.getNbRequest());
                 if (image.getNbRequest() >= 0.90 * WorkerNode.NB_MAX_REQUEST) {
                     nbsatures++;
                 }
-                else if (image.getNbRequest() < 0.1 * WorkerNode.NB_MAX_REQUEST) {
-                    if (manager.getWorkerNodes().size() > 1) {
+                else if (numberOfRequestModified && image.getNbRequest() < 0.1 * WorkerNode.NB_MAX_REQUEST) {
+        //     		                numberOfRequestModified = false;
+
+		       if (manager.getWorkerNodes().size() > 1) {
 
                         image.setState(State.TO_DELETE);
                         String[] argsUpRep = { manager.getVM0().getAddress(),
@@ -155,9 +170,11 @@ manager.getWorkerNodes().remove(image);
 
             }
 
+            if (numberOfRequestModified) {
+                numberOfRequestModified = false;
+            }
             if (nbsatures == manager.getWorkerNodes().size()) {
                 // Je cree un VM
-                System.out.println("yolo");
                 manager.addVM(os);
             }
 
@@ -236,8 +253,7 @@ manager.getWorkerNodes().remove(image);
         workerNodes.add(new WorkerNode(addressServer, 8080, id));
         System.out.println("Addition of calculator with port 8080 address " + addressServer + " and id " + id);
 
-        String[] args = { getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", Integer.toString(8080),
-            addressServer };
+        String[] args = { getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", addressServer, Integer.toString(8080) };
         UpdateRepartitor.main(args);
 
  try {
