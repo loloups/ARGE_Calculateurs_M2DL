@@ -2,6 +2,7 @@ package repartitor;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.xmlrpc.client.XmlRpcClient;
@@ -9,6 +10,14 @@ import org.apache.xmlrpc.webserver.WebServer;
 import java.net.MalformedURLException;
 import org.apache.xmlrpc.XmlRpcException;
 
+
+
+import org.openstack4j.api.Builders;
+import org.openstack4j.api.OSClient;
+import org.openstack4j.model.compute.Address;
+import org.openstack4j.model.compute.Server;
+import org.openstack4j.model.compute.ServerCreate;
+import org.openstack4j.openstack.OSFactory;
 
 import calculator.CalculatorDetails;
 import utils.RepartitorCalculatorCallback;
@@ -122,20 +131,55 @@ public class Repartitor {
 		return result;
 	}
 
+
+	/**
+     	* Authenticate to Cloudmip
+     	* 
+     	* @* @return OSClient
+     	*/
+    	public static OSClient connectCloudmip() {
+
+        	OSClient os = OSFactory.builder().endpoint("http://195.220.53.61:5000/v2.0").credentials("ens30", "74J2O1")
+            	.tenantName("service").authenticate();
+
+        	System.out.println("Connected to cloudmip");
+
+        	return os;
+    	}
+
 	public static void main(String[] args) throws Exception {
-		if(args.length != 2) {
+		if(args.length != 1) {
 			System.err.println("Repartitor needs exactly 1 parameter to start : repartitor port and addressManager.");
 		}
 		else {
 			System.out.println("Attenmpting to start Repartitor web server ...");
 
-			adressManager = args[1];
 			WebServer webServer = new WebServer(Integer.parseInt(args[0]));
 			XmlRpcUtil.createXmlRpcServer(webServer, "RepartitorHandlers.properties");
 			calculators = Collections.newSetFromMap(new ConcurrentHashMap<CalculatorDetails, Boolean>());
 			webServer.start();
 			System.out.println("Repartitor is ready and is now accepting requests.");
 			System.out.println("Halt program to stop server.");
+			
+			OSClient os = connectCloudmip();
+			
+			do {
+				System.out.println("Searching for Manager");
+            			List<? extends Server> servers = os.compute().servers().list();
+
+            			for (Server server : servers) {
+                			if ("Moskaland-AutonomicManager".equals(server.getName())) {
+                    				if (server.getAddresses().getAddresses() != null) {
+                        				System.out.println("Manager found");
+                        				System.out.println(
+                            					"Manager address" + server.getAddresses().getAddresses().get("private").get(0).getAddr());
+                        				adressManager = server.getAddresses().getAddresses().get("private").get(0).getAddr();
+                        				break;
+                    				}
+                			}
+            			}
+			}
+        		while (adressManager == null);	
 		}
 	}
 
