@@ -53,8 +53,8 @@ public class Operator {
 						client.executeAsync("Repartitor.send", params, new OperatorRepartitorCallback("send"));
 						//System.out.println("The result of (" + i + " + " + new Integer(i+1) + ") is " + result + ".");
 					}
-					System.out.println("1 second left ...");
-					Thread.sleep(1000);
+					System.out.println("5 seconds left ...");
+					Thread.sleep(5000);
 				}
 
 			}catch(Exception e) {
