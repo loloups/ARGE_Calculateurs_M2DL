@@ -146,6 +146,7 @@ public class AutonomicManager {
                             Integer.toString(image.getPort()) };
                         UpdateRepartitor.main(argsUpRep);
 
+manager.getWorkerNodes().remove(image);
                         if (State.TO_DELETE.name().equals(image.getState().name()) && image.getNbRequest() == 0) {
                             manager.deleteVM(image.getId(), os);
                         }
@@ -238,6 +239,15 @@ public class AutonomicManager {
         String[] args = { getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", Integer.toString(8080),
             addressServer };
         UpdateRepartitor.main(args);
+
+ try {
+            Thread.sleep(44440);
+        }
+        catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
     }
 
     /**
