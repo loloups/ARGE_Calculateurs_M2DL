@@ -85,7 +85,7 @@ public class Repartitor {
 				//Call Calculator
 				XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(calculatorDetails.getAddress(), calculatorDetails.getPort());
 	            Object[] params = new Object[] { new Integer(i) };
-                client.executeAsync("Calculator.add", params, new RepartitorCalculatorCallback(calculatorDetails, adressManager));
+                client.executeAsync("Calculator.add", params, new RepartitorCalculatorCallback(calculatorDetails, adressManager, i));
 				
 				curCalculator = (curCalculator+1) % (calculators.size());
 			}

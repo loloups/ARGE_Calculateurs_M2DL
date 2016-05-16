@@ -24,8 +24,6 @@ public class OperatorRepartitorCallback implements AsyncCallback {
 
         if (type == "send") {
             System.out.println("Request send");
-        } else if (type == "receive"){
-            System.out.println(request.getMethodName() + ": " + result);
         }
     }
 }

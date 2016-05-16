@@ -13,16 +13,28 @@ public class RepartitorCalculatorCallback implements AsyncCallback {
 
     private CalculatorDetails calculatorDetails;
     private String            addressManager;
-
-    public RepartitorCalculatorCallback(CalculatorDetails calculatorDetails, String address) {
+    private int parameter;
+    
+    public RepartitorCalculatorCallback(CalculatorDetails calculatorDetails, String address, int i) {
         super();
         this.calculatorDetails = calculatorDetails;
         this.addressManager = address;
+        this.parameter = i;
     }
 
     @Override
     public void handleError(XmlRpcRequest request, Throwable t) {
         System.out.println("In error");
+        Object[] params = new Object[] { new Integer(parameter) };
+        try {
+            XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(calculatorDetails.getAddress(), calculatorDetails.getPort());
+            client.executeAsync("Calculator.add", params, new RepartitorCalculatorCallback(calculatorDetails, addressManager, parameter));
+        }
+        catch (XmlRpcException | MalformedURLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
         t.printStackTrace();
     }
 
@@ -37,7 +49,7 @@ public class RepartitorCalculatorCallback implements AsyncCallback {
             Object[] params = new Object[] { calculatorDetails.getAddress(), calculatorDetails.getPort() };
             clientManager.execute("Manager.decr", params);
 
-            XmlRpcClient client = XmlRpcUtil.createXmlRpcClient("192.168.0.162", 2000);
+            XmlRpcClient client = XmlRpcUtil.createXmlRpcClient("localhost", 2000);
             Object[] paramsOperator = new Object[] { new Integer((int) result) };
             client.executeAsync("Operator.receive", paramsOperator, new OperatorRepartitorCallback("receive"));
         }
