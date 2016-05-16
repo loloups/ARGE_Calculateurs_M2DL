@@ -29,7 +29,7 @@ public class AutonomicManager {
     private Set<WorkerNode>        workerNodes;
     private WorkerNode             VM0;
     public static AutonomicManager manager;
-public static boolean numberOfRequestModified;
+    public static boolean          numberOfRequestModified;
 
     private String idImageCalc;
 
@@ -58,10 +58,14 @@ public static boolean numberOfRequestModified;
         this.idImageCalc = idImageCalc;
     }
 
+    /**
+     * The number of requests has been modified
+     * @param modified
+     * @return
+     */
     public boolean setNumberOfRequestModified(boolean modified) {
         numberOfRequestModified = modified;
-System.out.println("yolo");
-	return true;
+        return numberOfRequestModified;
     }
 
     /**
@@ -137,13 +141,8 @@ System.out.println("yolo");
 
         while (true) {
 
-
-	if (numberOfRequestModified) {
-		System.out.println("yolo");
-}
             int nbsatures = 0;
 
-	
             for (WorkerNode image : manager.getWorkerNodes()) {
 
                 System.out.println(image.getNbRequest());
@@ -151,9 +150,8 @@ System.out.println("yolo");
                     nbsatures++;
                 }
                 else if (numberOfRequestModified && image.getNbRequest() < 0.1 * WorkerNode.NB_MAX_REQUEST) {
-        //     		                numberOfRequestModified = false;
 
-		       if (manager.getWorkerNodes().size() > 1) {
+                    if (manager.getWorkerNodes().size() > 1) {
 
                         image.setState(State.TO_DELETE);
                         String[] argsUpRep = { manager.getVM0().getAddress(),
@@ -161,7 +159,7 @@ System.out.println("yolo");
                             Integer.toString(image.getPort()) };
                         UpdateRepartitor.main(argsUpRep);
 
-manager.getWorkerNodes().remove(image);
+                        manager.getWorkerNodes().remove(image);
                         if (State.TO_DELETE.name().equals(image.getState().name()) && image.getNbRequest() == 0) {
                             manager.deleteVM(image.getId(), os);
                         }
@@ -176,6 +174,18 @@ manager.getWorkerNodes().remove(image);
             if (nbsatures == manager.getWorkerNodes().size()) {
                 // Je cree un VM
                 manager.addVM(os);
+                
+                for (int i=0; i<40; i++) {
+                    try {
+                        Thread.sleep(1000);
+                        System.out.println("Wait for " + (40 - i) + " seconds");
+                    }
+                    catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+
             }
 
             try {
@@ -253,17 +263,9 @@ manager.getWorkerNodes().remove(image);
         workerNodes.add(new WorkerNode(addressServer, 8080, id));
         System.out.println("Addition of calculator with port 8080 address " + addressServer + " and id " + id);
 
-        String[] args = { getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", addressServer, Integer.toString(8080) };
+        String[] args = { getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", addressServer,
+            Integer.toString(8080) };
         UpdateRepartitor.main(args);
-
- try {
-            Thread.sleep(44440);
-        }
-        catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
     }
 
     /**

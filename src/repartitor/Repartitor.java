@@ -20,8 +20,13 @@ public class Repartitor {
 	public static String adressManager;
 	public static int curCalculator = 0;
 
+	/**
+	 * Notify the manager when the number of requests is modified
+	 * @param numberOfRequestModified
+	 * @return
+	 */
 	public boolean setNumberOfRequestModified(boolean numberOfRequestModified) {
-System.out.println("*******");
+	    
         XmlRpcClient clientManager;
         try {
             clientManager = XmlRpcUtil.createXmlRpcClient(adressManager, 8080);
@@ -34,7 +39,6 @@ System.out.println("*******");
         }
         
         return numberOfRequestModified;
-
 	}
 
 
@@ -57,7 +61,7 @@ System.out.println("*******");
 	}
 
 	/**
-	 * Remove a calcultor
+	 * Remove a calculator
 	 * @param port
 	 * @param address
 	 * @return

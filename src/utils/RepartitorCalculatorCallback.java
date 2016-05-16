@@ -24,7 +24,7 @@ public class RepartitorCalculatorCallback implements AsyncCallback {
 
     @Override
     public void handleError(XmlRpcRequest request, Throwable t) {
-        System.out.println("In error");
+//        System.out.println("In error");
         Object[] params = new Object[] { new Integer(parameter) };
         try {
             XmlRpcClient client = XmlRpcUtil.createXmlRpcClient(calculatorDetails.getAddress(), calculatorDetails.getPort());
@@ -35,7 +35,7 @@ public class RepartitorCalculatorCallback implements AsyncCallback {
             e.printStackTrace();
         }
 
-        t.printStackTrace();
+//        t.printStackTrace();
     }
 
     @Override
