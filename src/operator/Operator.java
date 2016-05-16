@@ -11,6 +11,7 @@ public class Operator {
 	public static int numberRequestsPerSecond;
 
 	public int receive(int i) {
+	    System.out.println("Result : " + i);
 		return i;
 	}	
 
