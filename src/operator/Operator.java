@@ -49,7 +49,7 @@ public class Operator {
 
 				while(true) {
 					for(int i=0; i< getNumberRequestsPerSecond() ;i++) {
-						Object[] params = new Object[] {new Integer(i)};
+						Object[] params = new Object[] {new Integer(10)};
 						client.executeAsync("Repartitor.send", params, new OperatorRepartitorCallback("send"));
 						//System.out.println("The result of (" + i + " + " + new Integer(i+1) + ") is " + result + ".");
 					}
