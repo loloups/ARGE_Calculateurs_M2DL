@@ -6,6 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.webserver.WebServer;
+import java.net.MalformedURLException;
+import org.apache.xmlrpc.XmlRpcException;
+
 
 import calculator.CalculatorDetails;
 import utils.RepartitorCalculatorCallback;
@@ -16,6 +19,25 @@ public class Repartitor {
 	public static Set<CalculatorDetails> calculators;
 	public static String adressManager;
 	public static int curCalculator = 0;
+
+	public boolean setNumberOfRequestModified(boolean numberOfRequestModified) {
+System.out.println("*******");
+        XmlRpcClient clientManager;
+        try {
+            clientManager = XmlRpcUtil.createXmlRpcClient(adressManager, 8080);
+            Object[] paramsManager = new Object[] {numberOfRequestModified};
+            clientManager.execute("Manager.setNumberOfRequestModified", paramsManager);
+        }
+        catch (MalformedURLException | XmlRpcException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        return numberOfRequestModified;
+
+	}
+
+
 	
 	/**
 	 * Add a calculator

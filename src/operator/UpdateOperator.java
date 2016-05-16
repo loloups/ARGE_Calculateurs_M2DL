@@ -18,6 +18,11 @@ public class UpdateOperator {
 				Object[] params = new Object[] { new Integer(args[0]) };
 				client.execute("Operator.setNumberRequestsPerSecond", params);
 
+                XmlRpcClient clientManager = XmlRpcUtil.createXmlRpcClient("localhost", 2001);
+                Object[] paramsManager = new Object[] { true };
+                clientManager.execute("Repartitor.setNumberOfRequestModified", paramsManager);
+
+
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
