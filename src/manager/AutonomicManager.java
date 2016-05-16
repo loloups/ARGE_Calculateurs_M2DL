@@ -26,9 +26,9 @@ import utils.XmlRpcUtil;
 
 public class AutonomicManager {
 
-    private Set<WorkerNode> workerNodes;
-    private WorkerNode      VM0;
-	public static AutonomicManager manager;
+    private Set<WorkerNode>        workerNodes;
+    private WorkerNode             VM0;
+    public static AutonomicManager manager;
 
     private String idImageCalc;
 
@@ -64,19 +64,14 @@ public class AutonomicManager {
      * @param port
      */
     public boolean incr(String address, int port) {
-  
-//	System.out.println("hey");
-//System.out.println(address);
-//	System.out.println(manager.getWorkerNodes().size());
-      for (WorkerNode image : manager.getWorkerNodes()) {
-           // System.out.println(image.getAddress());
-		if (address.equals(image.getAddress())) {
-		//System.out.println(image.getNbRequest());
+
+        for (WorkerNode image : manager.getWorkerNodes()) {
+            if (address.equals(image.getAddress())) {
                 image.setNbRequest(image.getNbRequest() + 1);
                 break;
             }
         }
-	return true;
+        return true;
     }
 
     /**
@@ -92,7 +87,7 @@ public class AutonomicManager {
                 break;
             }
         }
-	return true;
+        return true;
     }
 
     /**
@@ -135,24 +130,22 @@ public class AutonomicManager {
 
         while (true) {
 
-//		System.out.println(manager.getWorkerNodes().size() + "***");
             int nbsatures = 0;
             for (WorkerNode image : manager.getWorkerNodes()) {
 
-		System.out.println(image.getNbRequest()+"**");
+                System.out.println(image.getNbRequest());
                 if (image.getNbRequest() >= 0.90 * WorkerNode.NB_MAX_REQUEST) {
                     nbsatures++;
                 }
                 else if (image.getNbRequest() < 0.1 * WorkerNode.NB_MAX_REQUEST) {
                     if (manager.getWorkerNodes().size() > 1) {
-			
-                 //       if (State.ACTIVE.name().equals(image.getState().name())) {
-                            image.setState(State.TO_DELETE);
-                            String[] argsUpRep = { manager.getVM0().getAddress(),
-                                Integer.toString(manager.getVM0().getPort()), "del", image.getAddress(),
-                                Integer.toString(image.getPort()) };
-                            UpdateRepartitor.main(argsUpRep);
-                   //     }
+
+                        image.setState(State.TO_DELETE);
+                        String[] argsUpRep = { manager.getVM0().getAddress(),
+                            Integer.toString(manager.getVM0().getPort()), "del", image.getAddress(),
+                            Integer.toString(image.getPort()) };
+                        UpdateRepartitor.main(argsUpRep);
+
                         if (State.TO_DELETE.name().equals(image.getState().name()) && image.getNbRequest() == 0) {
                             manager.deleteVM(image.getId(), os);
                         }
@@ -164,7 +157,7 @@ public class AutonomicManager {
             if (nbsatures == manager.getWorkerNodes().size()) {
                 // Je cree un VM
                 System.out.println("yolo");
-		manager.addVM(os);
+                manager.addVM(os);
             }
 
             try {
@@ -238,25 +231,14 @@ public class AutonomicManager {
         String addressServer = addresses.get("private").get(0).getAddr();
 
         String id = server.getId();
-	System.out.println(id);
-	System.out.println(addressServer);  
-      workerNodes.add(new WorkerNode(addressServer, 8080, id));
+
+        workerNodes.add(new WorkerNode(addressServer, 8080, id));
         System.out.println("Addition of calculator with port 8080 address " + addressServer + " and id " + id);
 
-	System.out.println("hey");
-	System.out.println(workerNodes.size());
         String[] args = { getVM0().getAddress(), Integer.toString(getVM0().getPort()), "add", Integer.toString(8080),
             addressServer };
         UpdateRepartitor.main(args);
-
-        // Wait for web server calculator start
-/*        try {
-            Thread.sleep(20000);
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-  */  }
+    }
 
     /**
      * Delete a VM on the cloud
@@ -297,14 +279,6 @@ public class AutonomicManager {
 
         manager.addVM(os);
 
- /*       try {
-            Thread.sleep(5000);
-        }
-        catch (InterruptedException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-*/
         handleWN(os);
 
     }
